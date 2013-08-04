@@ -1,0 +1,421 @@
+<$mt:setvar name="screen_type" value="dialog-screen fjss_save_dialog"$>
+<mt:setvarblock name="page_title"><__trans phrase="Saving sort order of [_1] and [_2]" params="<mt:var name="cat_plural">%%<mt:var name="entry_plural">"></mt:setvarblock>
+<$mt:include name="dialog/header.tmpl"$>
+
+<div id="msg" style="border : 1px solid black; height : 360px; overflow : scroll;">
+<span><__trans phrase="Save information of moved [_1] and [_2]." params="<mt:var name="cat_plural">%%<mt:var name="entry_plural">"></span>
+<span id="icon">... <img src="<mt:var name="static_uri">plugins/SuperSort/images/loading.gif" alt="loading" /></span><br />
+</div>
+
+<!--<script type="text/javascript" src="<mt:var name="static_uri">plugins/SuperSort/js/jquery.js"></script>-->
+<script type="text/javascript" src="<$mt:var name="static_uri"$>plugins/SuperSort/extjs/adapter/jquery/ext-jquery-adapter.js"></script>
+<script type="text/javascript" src="<$mt:var name="static_uri"$>plugins/SuperSort/extjs/ext-all.js"></script>
+<script type="text/javascript">
+//<[!CDATA[
+(function(){
+    var per_save = <mt:var name="per_save">;
+    var FJSuperSort = window.parent.FJSuperSort;
+    var msgElm = document.getElementById('msg');
+
+    var md = FJSuperSort.move_data.slice(0, FJSuperSort.move_data.length);
+    var md_ptr = 0;
+    var md_len = md.length;
+
+    var cat_ids = new Array();
+    var cat_id_ptr = 0;
+    var process_mode = 'check';
+    var entry_ptr, entry_len;
+    var cd_len;
+    var cat_order, cat_order_changed, entry_order, entry_order_changed;
+
+    // initialize
+    function save_init() {
+        // save order only loaded categories
+        cat_recursive(FJSuperSort.tree.getRootNode());
+        cd_len = cat_ids.length;
+
+        if (md_len > 0) {
+            save_moved_data();
+        }
+        else if (cd_len > 0) {
+            save_sort_data();
+        }
+        else {
+            save_end();
+        }
+    }
+
+    // check dirty categories
+    function cat_recursive(node) {
+//        console.log('cat_recursive', 'node', node, 'childNodes', node.childNodes, 'cat_count', node.attributes.cat_count, 'cat_ids.length', cat_ids.length);
+//        alert('cat_recursive cid = ' + node.attributes.cid + ', cat_count = ' + node.attributes.cat_count);
+        if (node.attributes.cat_dirty || node.attributes.entry_dirty) {
+            cat_ids.push(node);
+        }
+        if (node.loaded) {
+            for (var i = 0; i < node.attributes.cat_count; i++) {
+                cat_recursive(node.childNodes[i]);
+            }
+        }
+    }
+
+    // save data of moved categories / entries
+    function save_moved_data() {
+        // show message
+        var md_save_end;
+        if (md_ptr + per_save < md_len) {
+            md_save_end = md_ptr + per_save;
+        }
+        else {
+            md_save_end = md_len;
+        }
+        show_message('<__trans phrase="Save information of moved [_1] and [_2]." params="<mt:var name="cat_plural">%%<mt:var name="entry_plural">"> : ' + (md_ptr + 1) + ' - ' + md_save_end);
+
+        // create data to save
+        var md_save_data_tmp = md.slice(md_ptr, md_ptr + per_save);
+        var md_save_data = new Array();
+        if (typeof md_save_data_tmp == 'object') {
+            var idxs = new Array();
+            for (var idx in md_save_data_tmp) {
+                idxs.push(idx);
+            }
+            idxs.sort;
+            for (var i = 0, j = idxs.length; i < j; i++) {
+                md_save_data.push(md_save_data_tmp[idxs[i]]);
+            }
+        }
+        else {
+            md_save_data = md_save_data_tmp;
+        }
+        var md_json = Ext.encode(md_save_data);
+/* comment out start
+        var txtbox = jQuery('#save_data');
+        var text = txtbox.text() + '\n' + md_json;
+        jQuery('#save_data').text(text);
+comment out end */
+
+        // send data
+        var req_url = '<mt:var name="mt_uri">';
+        req_url += '?__mode=fjss_save_moved_data';
+        req_url += '&class=<mt:var name="class_name">';
+        req_url += '&blog_id=<mt:var name="blog_id">';
+        req_url += '&offset=' + md_ptr;
+        req_url += '&r=' + (new Date()).getTime();
+        var send_data = { md : md_json };
+
+//        alert('req_url = ' + req_url);
+//        alert('send_data = ' + md_json);
+
+        jQuery.ajax({ type : 'POST',
+                 data : send_data,
+                 url : req_url,
+                 success : save_moved_data_success,
+                 error : save_moved_data_error
+               });
+    }
+
+    // save data of moved successfully
+    function save_moved_data_success(data) {
+        // check error
+        if (data.search(/error/) != -1) {
+            save_moved_data_error(data);
+            return;
+        }
+        FJSuperSort.is_change_saved = true;
+
+        // next process
+        md_ptr += per_save;
+        FJSuperSort.move_data = 
+            FJSuperSort.move_data.slice(per_save, 
+                                        FJSuperSort.move_data.length - per_save);
+
+        if (md_ptr < md_len) {
+            setTimeout(save_moved_data, 100);
+        }
+        else {
+//            return;
+            if (cd_len > 0) {
+                save_sort_data();
+            }
+            else {
+                save_mt51_sort_order();
+            }
+        }
+    }
+
+    function save_moved_data_error(data) {
+        if (data) {
+//            alert(data);
+        }
+        alert('<__trans phrase="Save information of moved [_1] and [_2] failured." params="<mt:var name="cat_plural">%%<mt:var name="entry_plural">">');
+        window.parent.location.href = '<mt:var name="mt_uri">?__mode=fjss_sort_order&blog_id=<mt:var name="blog_id">&type=<mt:var name="class_name">';
+    }
+
+    function save_sort_data() {
+        var req_url, send_data;
+
+        var node = cat_ids[cat_id_ptr];
+//        var cat_id = cat_ids[cat_id_ptr];
+//        var cd = FJSuperSort.cat_data[cat_id];
+
+        // check that sort order was changed
+        if (process_mode == 'check') {
+            cat_order = new Array();
+            entry_order = new Array();
+            cat_order_changed = false;
+            entry_order_changed = false;
+            entry_ptr = 0;
+
+            // show message
+            show_message('<__trans phrase="Check whether [_1] or [_2] order was changed" params="<mt:var name="cat_plural">%%<mt:var name="entry_single">"> : <mt:var name="cat_single"> \'' + node.attributes.text + '\'');
+
+            // check that category order was changed
+            var old_cat_order = node.attributes.cat_order;
+            var new_cat_order = '';
+            for (var i = 0, j = node.attributes.cat_count; i < j; i++) {
+                new_cat_order += node.childNodes[i].attributes.cid;
+                if (i != j - 1) {
+                    new_cat_order += ',';
+                }
+                cat_order.push(node.childNodes[i].attributes.cid);
+            }
+            cat_order_changed = (old_cat_order != new_cat_order);
+
+            // check that entry order was changed
+            var old_entry_order = node.attributes.entry_order;
+            var new_entry_order = '';
+            for (var i = node.attributes.cat_count, j = node.childNodes.length; i < j; i++) {
+                new_entry_order += node.childNodes[i].attributes.eid;
+                if (i != j - 1) {
+                    new_entry_order += ',';
+                }
+                entry_order.push(node.childNodes[i].attributes.eid);
+            }
+            entry_order_changed = (old_entry_order != new_entry_order);
+            entry_len = entry_order.length;
+
+            // alert('cat_id = ' + node.attributes.cid + '\old_cat_order = ' + old_cat_order + '\nnew_cat_order = ' + new_cat_order + '\nold_entry_order = ' + old_entry_order + '\nnew_entry_order = ' + new_entry_order + '\ncat_order_changed = ' + cat_order_changed + '\nentry_order_changed = ' + entry_order_changed);
+
+            // check that next process or save order
+            if (cat_order_changed && cat_order.length > 0) {
+                process_mode = 'cat';
+            }
+            else if (entry_order_changed && entry_len > 0) {
+                process_mode = 'entry';
+            }
+            else {
+                process_mode = 'next';
+            }
+        }
+
+        // save category order
+        if (process_mode == 'cat') {
+            // show message
+            show_message('<__trans phrase="Save sort order of [_1]" params="<mt:var name="cat_plural">"> : <mt:var name="cat_single"> \'' + node.attributes.text + '\'');
+
+            // send data
+            req_url = '<mt:var name="mt_uri">';
+            req_url += '?__mode=fjss_save_cat_order';
+            req_url += '&class=<mt:var name="class_name">';
+            req_url += '&blog_id=<mt:var name="blog_id">';
+            req_url += '&parent_id=' + node.attributes.cid;
+            req_url += '&r=' + (new Date()).getTime();
+
+//            console.log(req_url);
+//            console.log(cat_order);
+
+/*
+            if (cat_order.length == 0) {
+                send_data = 'order=[]';
+            }
+            else if (cat_order.length == 1) {
+                send_data = 'order=["' + cat_order[0] + '"]';
+            }
+            else {
+                send_data = { order : jQuery.toJSON(cat_order) };
+            }
+*/
+            send_data = { order : Ext.encode(cat_order) };
+
+//            alert('before cat save req_url = ' + req_url);
+//            console.log(send_data);
+
+            jQuery.ajax({ type : 'POST',
+                     data : send_data,
+                     url : req_url,
+                     success : save_cat_order_success,
+                     error : save_cat_ajax_error
+                   });
+            return;
+        }
+
+        // save entry order
+        if (process_mode == 'entry') {
+            // show message
+            var entry_end;
+            entry_end = (entry_ptr + per_save > entry_len)
+                ? entry_len : entry_ptr + per_save;
+            show_message('<__trans phrase="Save sort order of [_1]" params="<mt:var name="entry_plural">"> : <mt:var name="cat_single"> \'' + node.attributes.text + '\' : <mt:var name="entry_single"> ' + (entry_ptr + 1) + ' - ' + (entry_end));
+
+            // send data
+            req_url = '<mt:var name="mt_uri">';
+            req_url += '?__mode=fjss_save_entry_order';
+            req_url += '&class=<mt:var name="class_name">';
+            req_url += '&blog_id=<mt:var name="blog_id">';
+            req_url += '&parent_id=' + node.attributes.cid;
+            req_url += '&offset=' + entry_ptr;
+            req_url += '&r=' + (new Date()).getTime();
+            var send_entry_order = entry_order.slice(entry_ptr, entry_ptr + per_save);
+/*
+            if (send_entry_order.length == 0) {
+                send_data = 'order=[]';
+            }
+            else if (send_entry_order.length == 1) {
+                send_data = 'order=["' + send_entry_order[0] + '"]';
+            }
+            else {
+                send_data = { order : jQuery.toJSON(send_entry_order) };
+            }
+*/
+            send_data = { order : Ext.encode(send_entry_order) };
+
+//            alert('before save req_url = ' + req_url);
+//            alert('send_data = ' + Ext.encode(send_entry_order));
+
+            jQuery.ajax({ type : 'POST',
+                     data : send_data,
+                     url : req_url,
+                     success : save_entry_order_success,
+                     error : save_entry_order_error
+                   });
+            return;
+        }
+
+        // next category
+        if (process_mode == 'next') {
+            cat_id_ptr++;
+            if (cat_id_ptr < cd_len) {
+                process_mode = 'check';
+                setTimeout(save_sort_data, 100);
+            }
+            else {
+                save_mt51_sort_order();
+            }
+        }
+    }
+
+    function save_cat_order_success(data) {
+//        var cat_id = cat_ids[cat_id_ptr];
+//        var cd = FJSuperSort.cat_data[cat_id];
+
+        // check error
+        if (data.search(/error/) != -1) {
+            save_cat_order_error(data);
+            return;
+        }
+        
+        FJSuperSort.is_change_saved = true;
+//        cd.cat_order = cat_order;
+
+        // next process
+        if (entry_order_changed && entry_len > 0) {
+            process_mode = 'entry';
+        }
+        else {
+            process_mode = 'next';
+        }
+        setTimeout(save_sort_data, 100);
+    }
+
+    function save_cat_ajax_error(jqXHR, textStatus, errorThrown) {
+        alert('save cat ajax error');
+//        console.log(jqXHR);
+//        console.log(textStatus);
+//        console.log(errorThrown);
+    }
+
+    function save_cat_order_error(data) {
+//        console.log(data);
+        alert('<__trans phrase="Save sort order of [_1] failured." params="<mt:var name="cat_plural">">');
+        window.parent.location.href = '<mt:var name="mt_uri">?__mode=fjss_sort_order&blog_id=<mt:var name="blog_id">&type=<mt:var name="class_name">';
+    }
+
+    function save_entry_order_success(data) {
+//        var cat_id = cat_ids[cat_id_ptr];
+//        var cd = FJSuperSort.cat_data[cat_id];
+
+        // check error
+        if (data.search(/error/) != -1) {
+            save_entry_order_error(data);
+            return;
+        }
+        FJSuperSort.is_change_saved = true;
+
+        // next process
+        entry_ptr += per_save;
+        if (entry_ptr < entry_len) {
+            process_mode = 'entry';
+        }
+        else {
+            process_mode = 'next';
+//            cd.entry_order = entry_order;
+        }
+        setTimeout(save_sort_data, 100);
+    }
+
+    function save_entry_order_error(data) {
+//        console.log(data);
+        alert('<__trans phrase="Save sort order of [_1] failured." params="<mt:var name="entry_plural">">');
+        window.parent.location.href = '<mt:var name="mt_uri">?__mode=fjss_sort_order&blog_id=<mt:var name="blog_id">&type=<mt:var name="class_name">';
+    }
+
+    function show_message(msg) {
+        jQuery('#icon').before('<br /><span>' + msg + '</span>');
+        msgElm.scrollTop = msgElm.scrollHeight;
+    }
+
+    function save_mt51_sort_order() {
+        if (!cat_order_changed) {
+            save_end();
+            return;
+        }
+        show_message('<__trans phrase="Save Movable Type 5.1 native sort order of [_1]" params="<mt:var name="cat_plural">">');
+        var req_url = '<mt:var name="mt_uri">';
+        req_url += '?__mode=fjss_init_save_mt5_order';
+        req_url += '&type=<mt:var name="class_name">';
+        req_url += '&blog_id=<mt:var name="blog_id">';
+        jQuery.ajax({
+            type : 'GET',
+            url : req_url,
+            success : save_mt51_sort_order_success,
+            error : save_mt51_sort_order_error
+        });
+    }
+
+    function save_mt51_sort_order_success(data) {
+        if (data == 'ng') {
+            save_mt51_sort_order_error(data);
+        }
+        else {
+            save_end();
+        }
+    }
+
+    function save_mt51_sort_order_error(data) {
+//        console.log(data);
+        alert('<__trans phrase="Save Movable Type 5.1 native sort order of [_1] failured." params="<mt:var name="cat_plural">">');
+        window.parent.location.href = '<mt:var name="mt_uri">?__mode=fjss_sort_order&blog_id=<mt:var name="blog_id">&type=<mt:var name="class_name">';
+    }
+
+    function save_end() {
+        FJSuperSort.is_save_end = true;
+        parent.jQuery.fn.mtDialog.close();
+        return;
+    }
+
+    window.onload = save_init;
+})();
+//]]>
+</script>
+
+<mt:include name="dialog/footer.tmpl">

@@ -1,0 +1,84 @@
+<$mt:setvar name="screen_type" value="dialog-screen fjss_load_dialog"$>
+<mt:setvarblock name="page_title"><__trans phrase="Loading [_1] and [_2]" params="<mt:var name="cat_plural">%%<mt:var name="entry_plural">"></mt:setvarblock>
+<$mt:include name="dialog/header.tmpl"$>
+
+<div id="msg">
+<span><__trans phrase="Loading [_1] is finished." params="<mt:var name="cat_plural">"></span>
+<span id="icon">... <img src="<mt:var name="static_uri">plugins/SuperSort/images/loading.gif" alt="loading" /></span>
+</div>
+
+<!--<script type="text/javascript" src="<mt:var name="static_uri">plugins/SuperSort/js/jquery.js"></script>-->
+<script type="text/javascript">
+//<[!CDATA[
+var FJSuperSortLoadDialog = { per_load : <mt:var name="per_load"> };
+var FJSuperSort = window.parent.FJSuperSort;
+
+FJSuperSortLoadDialog.main = function() {
+    // set category data
+    var loaded_data = <mt:var name="cat_data">;
+    FJSuperSort.loaded_cat_data = loaded_data.cat_data;
+    // set entry information to load
+    FJSuperSort.loaded_entry_data = [];
+    FJSuperSortLoadDialog.parent_id = loaded_data.parent_id;
+    FJSuperSortLoadDialog.entry_count = loaded_data.entry_count;
+    FJSuperSortLoadDialog.entry_offset = 0;
+    // load entries
+    FJSuperSortLoadDialog.load_entries();
+}
+
+FJSuperSortLoadDialog.load_entries = function() {
+    // make url to load entries
+    var req_url = '<mt:var name="mt_uri">';
+    req_url += '?__mode=fjss_load_entry';
+    req_url += '&type=<mt:var name="class_name">';
+    req_url += '&blog_id=<mt:var name="blog_id">';
+    req_url += '&parent_id=' + FJSuperSortLoadDialog.parent_id;
+    req_url += '&offset=' + FJSuperSortLoadDialog.entry_offset;
+    // load entries
+    jQuery.ajax({ type : 'GET',
+             url : req_url,
+             success : FJSuperSortLoadDialog.load_entries_success,
+             error : FJSuperSortLoadDialog.load_entries_error
+           });
+}
+
+FJSuperSortLoadDialog.load_entries_success = function(data) {
+    // show message
+    var next_offset;
+    if (FJSuperSortLoadDialog.entry_offset + FJSuperSortLoadDialog.per_load
+            >= FJSuperSortLoadDialog.entry_count) {
+        next_offset = FJSuperSortLoadDialog.entry_count;
+    }
+    else {
+        next_offset = FJSuperSortLoadDialog.entry_offset + FJSuperSortLoadDialog.per_load;
+    }
+    var html = '<br /><span><__trans phrase="Loaded [_1]" params="<mt:var name="entry_plural">"> : ' + (FJSuperSortLoadDialog.entry_offset + 1) + ' - ' + next_offset;
+    html += '</span>';
+    jQuery('#icon').before(html);
+    // append loaded data to FJSuperSort.loaded_entry_data
+    var loaded_data = eval('(' + data + ')');
+    FJSuperSort.loaded_entry_data =
+        FJSuperSort.loaded_entry_data.concat(loaded_data);
+    // load next entries
+    if (next_offset == FJSuperSortLoadDialog.entry_count) {
+        FJSuperSort.loaded = true
+        parent.jQuery.fn.mtDialog.close();
+//        closeDialog();
+    }
+    else {
+        FJSuperSortLoadDialog.entry_offset = next_offset
+        setTimeout(FJSuperSortLoadDialog.load_entries, 100);
+    }
+}
+
+FJSuperSortLoadDialog.load_entries_error = function() {
+    FJSuperSort.load_error = true;
+    parent.jQuery.fn.mtDialog.close();
+//    closeDialog();
+}
+
+FJSuperSortLoadDialog.main();
+//]]>
+</script>
+
+<mt:include name="dialog/footer.tmpl">

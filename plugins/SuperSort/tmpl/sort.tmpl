@@ -1,0 +1,938 @@
+<mt:setvarblock name="page_title"><__trans phrase="Sort [_1] and [_2]" params="<mt:var name="cat_plural">%%<mt:var name="entry_plural">"></mt:setvarblock>
+<mt:setvarblock name="html_head" append="1">
+    <link rel="stylesheet" href="<$mt:var name="static_uri"$>plugins/SuperSort/extjs/resources/css/ext-all.css" />
+    <link rel="stylesheet" href="<$mt:var name="static_uri"$>plugins/SuperSort/css/styles.css" />
+</mt:setvarblock>
+<mt:setvar name="position_actions_bottom" value="1">
+<mt:setvar name="position_actions_top" value="1">
+<mt:setvartemplate name="action_buttons">
+    <button
+        type="submit"
+        accesskey="s"
+        title="<__trans phrase="Save Changes">"
+        class="save action primary button"
+        ><__trans phrase="Save Changes"></button>
+</mt:setvartemplate>
+
+<mt:if name="saved">
+    <mt:setvarblock name="content_header">
+        <mtapp:statusmsg
+            id="saved-changes"
+            class="success">
+            <span id="saved-changes-msg1"><__trans phrase="Saved sort order of [_1] and [_2]." params="<mt:var name="cat_plural">%%<mt:var name="entry_plural">"></span>
+            <span id="saved-changes-msg2"><br /><a href="#" onclick="window.open('<mt:var name="mt_url">?__mode=rebuild_confirm&amp;blog_id=<mt:var name="blog_id">', 'rebuild', 'width=400,height=300,resizable=yes');"><__trans phrase="Rebuild [_1]." params="<mt:var name="blog_single">"></a></span>
+        </mtapp:statusmsg>
+    </mt:setvarblock>
+</mt:if>
+
+<mt:if name="delete_type">
+    <mt:setvarblock name="content_header">
+        <mtapp:statusmsg
+            id="saved-changes"
+            class="success">
+            <span id="saved-changes-msg1"><__trans phrase="Deleted [_1]." params="<mt:var name="delete_type">"></span>
+            <span id="saved-changes-msg2"><br /><a href="#" onclick="window.open('<mt:var name="mt_url">?__mode=rebuild_confirm&amp;blog_id=<mt:var name="blog_id">', 'rebuild', 'width=400,height=300,resizable=yes');"><__trans phrase="Rebuild [_1]." params="<mt:var name="blog_single">"></a></span>
+        </mtapp:statusmsg>
+    </mt:setvarblock>
+</mt:if>
+
+<mt:include name="include/header.tmpl">
+
+<mt:if name="can_sort">
+    <form name="save_top" method="post" action="<mt:var name="mt_url">" onsubmit="return FJSuperSort.Save();">
+        <mt:include name="include/actions_bar.tmpl" bar_position="top" hide_pager="1">
+        <input type="hidden" name="__mode" value="<mt:var name="next_mode">" />
+        <input type="hidden" name="blog_id" value="<mt:var name="blog_id">" />
+    </form>
+
+    <div id="sort" style="overflow : auto;">
+    </div>
+
+    <form name="save_bottom" method="post" action="<mt:var name="mt_url">" onsubmit="return FJSuperSort.Save();">
+         <mt:include name="include/actions_bar.tmpl" bar_position="bottom" hide_pager="1">
+         <input type="hidden" name="__mode" value="<mt:var name="next_mode">" />
+         <input type="hidden" name="blog_id" value="<mt:var name="blog_id">" />
+    </form>
+<mt:else>
+    <mtapp:statusmsg id="zero-state" class="info zero-state">
+        <__trans phrase="There are no [_1] and [_2]." params="<mt:var name="cat_plural">%%<mt:var name="entry_plural">">
+    </mtapp:statusmsg>
+</mt:if>
+
+<mt:if name="can_sort">
+<script type="text/javascript" src="<$mt:var name="static_uri"$>plugins/SuperSort/extjs/adapter/jquery/ext-jquery-adapter.js"></script>
+<script type="text/javascript" src="<$mt:var name="static_uri"$>plugins/SuperSort/extjs/ext-all.js"></script>
+<script type="text/javascript" charset="utf-8">
+//<[!CDATA[
+var FJSuperSort = {
+    tree : undefined,
+    rootMenu : undefined,
+    catMenu : undefined,
+    entryMenu : undefined,
+    isDirty : false,
+    move_data : [],
+    cat_move_data : {},
+    entry_move_data : {},
+    inExpanding : false,
+    className : '<mt:var name="class_name" encode_js="1">'
+};
+
+FJSuperSort.TreeNodeUI = Ext.extend(Ext.tree.TreeNodeUI, {
+    renderElements : function(n, a, targetNode, bulkRender){
+        // add some indent caching, this helps performance when rendering a large tree
+        this.indentMarkup = n.parentNode ? n.parentNode.ui.getChildIndent() : '';
+
+        var cb = typeof a.checked == 'boolean';
+
+        var href = a.href ? a.href : Ext.isGecko ? "" : "#";
+        var firstPfx = a.firstNode ? '_d' : '';
+        var lastPfx  = a.lastNode ? '_d' : '';
+        var canLeftPfx;
+        if (a.id != 'root') {
+            canLeftPfx = (n.parentNode.id == 'root') ? '_d' : '';
+        }
+        var canRightPfx;
+        if (a.id != 'root') {
+            if (a.cls == 'folder') {
+                canRightPfx = (n.parentNode.attributes.cat_count <= 1) ? '_d' : '';
+            }
+            else if (a.cls == 'file') {
+                canRightPfx = (n.parentNode.attributes.cat_count < 1) ? '_d' : '';
+            }
+        }
+        var buf = ['<li class="x-tree-node"><div ext:tree-node-id="',n.id,'" class="x-tree-node-el x-tree-node-leaf x-unselectable ', a.cls,'" unselectable="on">',
+            '<span class="x-tree-node-indent">',this.indentMarkup,"</span>",
+            '<img src="', this.emptyIcon, '" class="x-tree-ec-icon x-tree-elbow" />',
+            '<img src="', a.icon || this.emptyIcon, '" class="x-tree-node-icon',(a.icon ? " x-tree-node-inline-icon" : ""),(a.iconCls ? " "+a.iconCls : ""),'" unselectable="on" />',
+            (a.id != 'root') ? '<img src="<$mt:var name="static_uri"$>plugins/SuperSort/images/left' + canLeftPfx + '.gif" class="btnicon" />' : '',
+            (a.id != 'root') ? '<img src="<$mt:var name="static_uri"$>plugins/SuperSort/images/right' + canRightPfx + '.gif" class="btnicon" />' : '',
+            (a.id != 'root') ? '<img src="<$mt:var name="static_uri"$>plugins/SuperSort/images/top' + firstPfx + '.gif" class="btnicon" />' : '',
+            (a.id != 'root') ? '<img src="<$mt:var name="static_uri"$>plugins/SuperSort/images/up' + firstPfx + '.gif" class="btnicon" />' : '',
+            (a.id != 'root') ? '<img src="<$mt:var name="static_uri"$>plugins/SuperSort/images/down' + lastPfx + '.gif" class="btnicon" />' : '',
+            (a.id != 'root') ? '<img src="<$mt:var name="static_uri"$>plugins/SuperSort/images/bottom' + lastPfx + '.gif" class="btnicon" />' : '',
+            '<img src="<$mt:var name="static_uri"$>plugins/SuperSort/images/ctxmenu_b.gif" class="btnicon" />',
+            cb ? ('<input class="x-tree-node-cb" type="checkbox" ' + (a.checked ? 'checked="checked" />' : '/>')) : '',
+            '<a hidefocus="on" class="x-tree-node-anchor" href="',href,'" tabIndex="1" ',
+            a.hrefTarget ? ' target="'+a.hrefTarget+'"' : "", '><span unselectable="on"',
+            (a.cls == 'file') ? ' title="<__trans phrase="Date"> : ' + a.date + ', <__trans phrase="Author"> : ' + escape(a.author) + '"' : '',
+            '>', n.text ,"</span></a></div>",
+            '<ul class="x-tree-node-ct" style="display:none;"></ul>',
+            "</li>"].join('');
+
+        var nel;
+        if(bulkRender !== true && n.nextSibling && (nel = n.nextSibling.ui.getEl())){
+            this.wrap = Ext.DomHelper.insertHtml("beforeBegin", nel, buf);
+        }else{
+            this.wrap = Ext.DomHelper.insertHtml("beforeEnd", targetNode, buf);
+        }
+        
+        this.elNode = this.wrap.childNodes[0];
+        this.ctNode = this.wrap.childNodes[1];
+        var cs = this.elNode.childNodes;
+        this.indentNode = cs[0];
+        this.ecNode = cs[1];
+        this.iconNode = cs[2];
+        var index = (a.id != 'root') ? 10 : 4;
+        if (a.id != 'root') {
+            Ext.get(cs[3]).on('click', function() { FJSuperSort.NodeLeft(n) });
+            Ext.get(cs[4]).on('click', function() { FJSuperSort.NodeRight(n) });
+            Ext.get(cs[5]).on('click', function() { FJSuperSort.NodeTop(n) });
+            Ext.get(cs[6]).on('click', function() { FJSuperSort.NodeUp(n) });
+            Ext.get(cs[7]).on('click', function() { FJSuperSort.NodeDown(n) });
+            Ext.get(cs[8]).on('click', function() { FJSuperSort.NodeBottom(n) });
+            Ext.get(cs[9]).on('click', function() { FJSuperSort.OpenMenu(n) });
+            n.leftIconNode   = cs[3];
+            n.rightIconNode  = cs[4];
+            n.topIconNode    = cs[5];
+            n.upIconNode     = cs[6];
+            n.downIconNode   = cs[7];
+            n.bottomIconNode = cs[8];
+            n.ctxMenuNode    = cs[9];
+        }
+        else {
+            Ext.get(cs[3]).on('click', function() { FJSuperSort.OpenMenu(n) });
+            n.ctxMenuNode = cs[3];
+        }
+        if(cb){
+            this.checkbox = cs[index];
+			// fix for IE6
+			this.checkbox.defaultChecked = this.checkbox.checked;
+            index++;
+        }
+        this.anchor = cs[index];
+        this.textNode = cs[index].firstChild;
+    }
+});
+
+FJSuperSort.TreeLoader = Ext.extend(Ext.tree.TreeLoader, {
+    requestData : function(node, callback, scope) {
+        this.reqBuffer = new Array();
+        this.reqMode = 'cat';
+        this.offset = 0;
+        this.per_load = <$mt:var name="per_load"$>;
+        if(this.fireEvent("beforeload", this, node, callback) !== false) {
+            var wrap = node.ui.wrap.firstChild;
+            jQuery(wrap).append('<span id="fjss_wait_msg"> (<__trans phrase="Loading sub [_1]" params="<$mt:var name="cat_plural"$>">)</span>');
+            var params = this.getParams(node);
+            params['__mode'] = 'fjss_load_categories';
+            params['blog_id'] = <$mt:var name="blog_id"$>;
+            params['parent_id'] = node.attributes.cid;
+            params['type'] = '<$mt:var name="class_name"$>';
+//            console.log('loading cats', params, this, node, callback);
+            this.transId = Ext.Ajax.request({
+                method : this.requestMethod,
+                url : this.dataUrl || this.url,
+                success : this.handleResponse,
+                failure : this.handleFailure,
+                scope : this,
+                argument : { callback: callback, node: node, scope: scope },
+                params : params
+            });
+        } else {
+            // if the load is cancelled, make sure we notify
+            // the node that we are done
+            this.runCallback(callback, scope || node, []);
+        }
+    },
+
+    handleResponse : function(response){
+//        console.log('handleResponse', response);
+        var a = response.argument;
+        var data;
+        var entry_count = a.node.attributes.entry_count;
+        try {
+            data = Ext.decode(response.responseText);
+        }
+        catch(e) {
+            this.handleFailure(response);
+        }
+        this.reqBuffer = this.reqBuffer.concat(data);
+        if (this.reqMode == 'cat' && a.node.attributes.entry_count > 0 ||
+            this.reqMode == 'entry' && this.offset < entry_count) {
+            var last_no = this.offset + this.per_load;
+            if (last_no > entry_count) {
+                last_no = entry_count;
+            }
+            jQuery('#fjss_wait_msg').html(' (<__trans phrase="Loading [_1] : " params="<$mt:var name="entry_plural"$>">' + (this.offset + 1) + ' - ' + last_no + ')');
+            var params = this.getParams(a.node);
+            params['__mode'] = 'fjss_load_entries';
+            params['blog_id'] = <$mt:var name="blog_id"$>;
+            params['parent_id'] = a.node.attributes.cid;
+            params['type'] = '<$mt:var name="class_name"$>';
+            params['offset'] = this.offset;
+            this.reqMode = 'entry';
+            this.offset += this.per_load;
+            this.transId = Ext.Ajax.request({
+                method : this.requestMethod,
+                url : this.dataUrl || this.url,
+                success : this.handleResponse,
+                failure : this.handleFailure,
+                scope : this,
+                argument : { callback: a.callback, node: a.node, scope: a.scope },
+                params : params
+            });
+        }
+        else {
+            this.transId = false;
+            this.processResponse(response, a.node, a.callback, a.scope);
+            jQuery('#fjss_wait_msg').remove();
+            this.fireEvent("load", this, a.node, response);
+        }
+    },
+
+    processResponse : function(response, node, callback, scope){
+        var o = this.reqBuffer;
+        node.beginUpdate();
+        var cat_order = new Array();
+        var entry_order = new Array();
+        for(var i = 0, len = o.length; i < len; i++){
+            if (o[i].leaf == 'true') {
+                o[i].leaf = true;
+            }
+            if (o[i].cls == 'folder') {
+                o[i].cat_count = Number(o[i].cat_count);
+                if (o[i].cat_count == undefined) {
+                    o[i].cat_count = 0;
+                }
+                if (o[i].cid == undefined) {
+                    o[i].cid = 0;
+                }
+                if (o[i].parent_cat == undefined) {
+                    o[i].parent_cat = 0;
+                }
+                o[i].entry_count = Number(o[i].entry_count);
+                if (o[i].entry_count == undefined) {
+                    o[i].entry_count = 0;
+                }
+                cat_order.push(o[i].cid);
+            }
+            else {
+                entry_order.push(o[i].cid);
+            }
+            o[i].firstNode = (i == 0 ||
+                              i == node.attributes.cat_count);
+            o[i].lastNode  = (i == node.attributes.cat_count - 1 ||
+                              i == o.length - 1);
+            var n = this.createNode(o[i]);
+            if(n){
+                node.appendChild(n);
+            }
+        }
+        node.endUpdate();
+        node.attributes.children_loaded = true;
+        node.attributes.cat_order = cat_order.join(',');
+        node.attributes.entry_order = entry_order.join(',');
+        this.runCallback(callback, scope || node, [node]);
+    }
+});
+
+FJSuperSort.Initialize = function() {
+    FJSuperSort.tree = new Ext.tree.TreePanel({
+        useArrows : true,
+//        autoScroll : true,
+        animate : false,
+        enableDD : <$mt:var name="drag_drop"$>,
+        containerScroll : true,
+        border : false,
+        listeners : {
+            beforemovenode : function(tree, node, oldParent, newParent, index) {
+                return FJSuperSort.onBeforeMoveNode(tree, node, oldParent, newParent, index)
+            },
+            movenode : function(tree, node, oldParent, newParent, index) {
+                FJSuperSort.onMoveNode(tree, node, oldParent, newParent, index)
+            },
+            beforeload : function(node) {
+                if (FJSuperSort.inExpanding) {
+                    alert('<__trans phrase="Now expanding other [_1]. Please wait." params="<$mt:var name="cat_single"$>">');
+                    return false;
+                }
+                FJSuperSort.inExpanding = true;
+                return true;
+            },
+            load : function(node) {
+                FJSuperSort.inExpanding = false;
+            }
+        },
+        loader : new FJSuperSort.TreeLoader({
+            dataUrl : '<$mt:var name="mt_url"$>',
+            baseAttrs : {
+                uiProvider : FJSuperSort.TreeNodeUI
+            }
+        }),
+        root : {
+            nodeType : 'async',
+            cls: 'folder',
+            text : '<__trans phrase="Root">',
+            draggable : false,
+            id : 'root',
+            cid : 0,
+            cat_count : <$mt:var name="cat_count"$>,
+            entry_count : <$mt:var name="entry_count"$>
+        }
+    });
+    FJSuperSort.tree.render('sort');
+    FJSuperSort.tree.getRootNode().expand();
+
+    var root_items = [], sub_items = [];
+    if (FJSuperSort.className == 'category') {
+        root_items.push({
+            id : 'create_root_cat',
+            text : '<__trans phrase="Create new root [_1]" params="<$mt:var name="cat_single"$>">',
+            handler : FJSuperSort.CreateRootCategory
+        });
+        sub_items.push({
+            id : 'create_cat',
+            text : '<__trans phrase="Create sub [_1]" params="<$mt:var name="cat_single"$>">',
+            handler : FJSuperSort.CreateCategory
+        });
+    }
+    root_items.push({
+        id : 'create_root_entry',
+        text : '<__trans phrase="Create new [_1] in root [_2]" params="<$mt:var name="entry_single"$>%%<$mt:var name="cat_single"$>">',
+        handler : FJSuperSort.CreateRootEntry
+    });
+    sub_items.push(
+        {
+            id: 'edit_cat',
+            text: '<__trans phrase="Edit this [_1]" params="<$mt:var name="cat_single"$>">',
+            handler : FJSuperSort.EditCategory
+        },
+        {
+            id : 'delete_cat',
+            text : '<__trans phrase="Delete this [_1]" params="<$mt:var name="cat_single"$>">',
+            handler : FJSuperSort.DeleteCategory
+        },
+        {
+            id : 'create_entry',
+            text : '<__trans phrase="Create new [_1] in this [_2]" params="<$mt:var name="entry_single"$>%%<$mt:var name="cat_single"$>">',
+            handler : FJSuperSort.CreateEntryInCategory
+        }
+    );
+    FJSuperSort.rootMenu = new Ext.menu.Menu({
+        id : 'rootmenu',
+        autoHeight : true,
+        items : root_items
+    });
+
+    FJSuperSort.catMenu = new Ext.menu.Menu({
+        id : 'catmenu',
+        autoHeight : true,
+        items : sub_items
+    });
+
+    FJSuperSort.entryMenu = new Ext.menu.Menu({
+        id : 'entrymenu',
+        enableScrolling : false,
+        items : [
+            {
+                id : 'edit_entry',
+                text : '<__trans phrase="Edit this [_1]" params="<$mt:var name="entry_single"$>">',
+                handler : FJSuperSort.EditEntry
+            },
+            {
+                id : 'view_entry',
+                text : '<__trans phrase="View this [_1]" params="<$mt:var name="entry_single"$>">',
+                handler : FJSuperSort.ViewEntry
+            },
+            {
+                id : 'delete_entry',
+                text : '<__trans phrase="Delete this [_1]" params="<$mt:var name="entry_single"$>">',
+                handler : FJSuperSort.DeleteEntry
+            }
+        ]
+    });
+};
+
+FJSuperSort.onBeforeMoveNode = function(tree, node, oldParent, newParent, index) {
+//    console.log('cls = ' + node.attributes.cls, 'cat_count = ' + node.attributes.cat_count, 'id = ' + newParent.attributes.id);
+    if (node.attributes.cls == 'file' && node.attributes.cat_count > 1) {
+        if (newParent.attributes.id == 'root') {
+            // can't move entry belongs to two or more categories
+            alert("<__trans phrase="This [_1] exists in other [_2], so this [_1] can't move to root [_2]" params="<$mt:var name="entry_single"$>%%<$mt:var name="cat_single"$>">");
+            return false;
+        }
+        else if (newParent.attributes.cid != oldParent.attributes.cid) {
+            // can't move entry to category which has same entry
+            var sib_entries = newParent.childNodes;
+            for (var i = newParent.attributes.cat_count, j = sib_entries.length; i < j; i++) {
+                var sib_entry = sib_entries[i];
+                if (node.attributes.eid == sib_entry.attributes.eid) {
+                    alert("<__trans phrase="Same [_1] already exists in [_2] move to." params="<$mt:var name="entry_single"$>%%<$mt:var name="cat_single"$>">");
+                    return false;
+                }
+            }
+        }
+    }
+    else if (node.attributes.cls == 'folder') {
+        // can't move category to other category whch has same name category
+        var sib_cats = newParent.childNodes;
+        for (var i = 0, j = newParent.attributes.cat_count; i < j; i++) {
+            sib_cat = sib_cats[i];
+            if (node.attributes.text == sib_cat.attributes.text &&
+                node.attributes.cid != sib_cat.attributes.cid) {
+                alert("<__trans phrase="Same name sub category already exists in category move to.">");
+                return false;
+            }
+        }
+    }
+}
+
+FJSuperSort.onMoveNode = function(tree, node, oldParent, newParent, index) {
+    // category can't move to position after entry
+    // entry can't move to position before category
+    if (node.attributes.cls == 'folder' && node.previousSibling && node.previousSibling.attributes.cls == 'file' ||
+        node.attributes.cls == 'file' && node.nextSibling && node.nextSibling.attributes.cls == 'folder') {
+        var first_entry;
+        if (node.attributes.cls == 'folder') {
+            if (oldParent.attributes.cid == newParent.attributes.cid) {
+                first_entry = newParent.childNodes[newParent.attributes.cat_count - 1];
+            }
+            else {
+                first_entry = newParent.childNodes[newParent.attributes.cat_count];
+            }
+        }
+        else {
+            first_entry = newParent.childNodes[newParent.attributes.cat_count + 1];
+        }
+        newParent.insertBefore(node, first_entry);
+    }
+
+    // change count and set dirty flag
+    if (node.attributes.cls == 'folder') {
+        newParent.attributes.cat_dirty = true;
+        oldParent.attributes.cat_dirty = true;
+    }
+    else {
+        newParent.attributes.entry_dirty = true;
+        oldParent.attributes.entry_dirty = true;
+    }
+    FJSuperSort.CountCatAndEntry(newParent);
+    if (newParent.attributes.cid != oldParent.attributes.cid) {
+        FJSuperSort.CountCatAndEntry(oldParent);
+    }
+
+    // set top / bottom icon of this node
+//    console.log('node', node, 'newParent', newParent, 'oldParent', oldParent);
+    FJSuperSort.SetNodeIcon(node);
+    FJSuperSort.SetParentNodeIcon(newParent);
+    if (newParent.attributes.cid != oldParent.attributes.cid) {
+        FJSuperSort.SetParentNodeIcon(oldParent);
+        // change right icon
+        FJSuperSort.SetRightIcon(oldParent);
+        FJSuperSort.SetRightIcon(newParent);
+    }
+
+    // set left icon of this node
+    node.leftIconNode.src = '<$mt:var name="static_uri"$>plugins/SuperSort/images/left' + ((node.parentNode.id == 'root') ? '_d' : '') + '.gif';
+
+    // save information of change category
+    if (oldParent.attributes.cid != newParent.attributes.cid) {
+        var attr = node.attributes
+        if (attr.cls == 'folder') {
+            FJSuperSort.cat_move_data[attr.cid] = {
+                old_cat : attr.parent_cat,
+                new_cat : newParent.attributes.cid
+            }
+        }
+        else if (attr.cls == 'file') {
+            FJSuperSort.entry_move_data[attr.eid] = {
+                old_cat : attr.parent_cat,
+                new_cat : newParent.attributes.cid
+            };
+        }
+    }
+
+    // set oldParent class if oldParent has no child node
+    if (oldParent.childNodes.length == 0) {
+        var divNode = Ext.get(oldParent.ui.wrap.firstChild);
+        divNode.removeClass('x-tree-node-leaf');
+        divNode.addClass('x-tree-node-collapsed');
+    }
+
+    // set dirty flag
+    FJSuperSort.isDirty = true;
+};
+
+FJSuperSort.CountCatAndEntry = function(node) {
+    var cat_count = 0, entry_count = 0;
+    for (var i = 0, j = node.childNodes.length; i < j; i++) {
+        if (node.childNodes[i].attributes.cls == 'folder') {
+            cat_count++;
+        }
+        if (node.childNodes[i].attributes.cls == 'file') {
+            entry_count++;
+        }
+    }
+    node.attributes.cat_count = cat_count;
+    node.attributes.entry_count = entry_count;
+}
+
+FJSuperSort.SetRightIcon = function(node) {
+    var canRightFlag = (node.attributes.cat_count > 1) ? '' : '_d';
+    for (var i = 0, j = node.attributes.cat_count; i < j; i++) {
+        node.childNodes[i].rightIconNode.src = '<$mt:var name="static_uri"$>plugins/SuperSort/images/right' + canRightFlag + '.gif';
+    }
+    var canRightFlag = (node.attributes.cat_count > 0) ? '' : '_d';
+    for (var i = node.attributes.cat_count, j = node.childNodes.length; i < j; i++) {
+        node.childNodes[i].rightIconNode.src = '<$mt:var name="static_uri"$>plugins/SuperSort/images/right' + canRightFlag + '.gif';
+    }
+}
+
+FJSuperSort.SetParentNodeIcon = function(node) {
+    var cat_count = node.attributes.cat_count;
+    if (cat_count >= 1) {
+        FJSuperSort.SetNodeIcon(node.childNodes[0]);
+    }
+    if (cat_count >= 2) {
+        FJSuperSort.SetNodeIcon(node.childNodes[cat_count - 1]);
+    }
+    if (cat_count >= 3) {
+        FJSuperSort.SetNodeIcon(node.childNodes[1]);
+    }
+    if (cat_count >= 4) {
+        FJSuperSort.SetNodeIcon(node.childNodes[cat_count - 2]);
+    }
+    var entry_count = node.attributes.entry_count;
+    if (entry_count >= 1) {
+        FJSuperSort.SetNodeIcon(node.childNodes[cat_count]);
+    }
+    if (entry_count >= 2) {
+        FJSuperSort.SetNodeIcon(node.childNodes[cat_count + entry_count - 1]);
+    }
+    if (entry_count >= 3) {
+        FJSuperSort.SetNodeIcon(node.childNodes[cat_count + 1]);
+    }
+    if (entry_count >= 4) {
+        FJSuperSort.SetNodeIcon(node.childNodes[cat_count + entry_count - 2]);
+    }
+};
+
+FJSuperSort.SetNodeIcon = function(node) {
+    var canMoveFlag;
+
+    if (node.attributes.id == 'root') {
+        return;
+    }
+    if (node.attributes.cls == 'folder') {
+        canMoveFlag = node.previousSibling ? '' : '_d';
+    }
+    else if (node.attributes.cls == 'file') {
+        canMoveFlag = (node.previousSibling &&
+                       node.previousSibling.attributes.cls == 'file') ? '' : '_d';
+    }
+    node.topIconNode.src = '<$mt:var name="static_uri"$>plugins/SuperSort/images/top' + canMoveFlag + '.gif'
+    node.upIconNode.src = '<$mt:var name="static_uri"$>plugins/SuperSort/images/up' + canMoveFlag + '.gif'
+    if (node.attributes.cls == 'folder') {
+        canMoveFlag = (node.nextSibling &&
+                       node.nextSibling.attributes.cls == 'folder') ? '' : '_d';
+    }
+    else if (node.attributes.cls == 'file') {
+        canMoveFlag = node.nextSibling ? '' : '_d';
+    }
+    node.bottomIconNode.src = '<$mt:var name="static_uri"$>plugins/SuperSort/images/bottom' + canMoveFlag + '.gif'
+    node.downIconNode.src = '<$mt:var name="static_uri"$>plugins/SuperSort/images/down' + canMoveFlag + '.gif'
+};
+
+FJSuperSort.NodeLeft = function(node) {
+    var oldParent = node.parentNode;
+    var host_node;
+    if (node.parentNode.attributes.id == 'root') {
+        return;
+    }
+    if (node.attributes.cls == 'folder') {
+        host_node = node.parentNode.parentNode.childNodes[node.parentNode.parentNode.attributes.cat_count];
+    }
+    else if (node.attributes.cls == 'file') {
+        host_node = node.parentNode.parentNode.lastChild.nextSibling;
+    }
+    node.parentNode.parentNode.insertBefore(node, host_node);
+    var newParent = node.parentNode;
+//    console.log('oldParent', oldParent, 'newParent', newParent);
+    FJSuperSort.onMoveNode(node.getOwnerTree(), node, oldParent, newParent, null);
+}
+
+FJSuperSort.NodeRight = function(node) {
+    FJSuperSort.selected_cat_id = -1;
+    FJSuperSort.node_right_from_node = node;
+    var cat_ids = new Array();
+    var parent = node.parentNode;
+    var siblings = node.parentNode.childNodes;
+    // find sibling categories
+    for (var i = 0, j = parent.attributes.cat_count; i < j; i++) {
+        if (node.attributes.cls == 'file' ||
+            node.attributes.cls == 'folder' &&
+            node.attributes.cid != siblings[i].attributes.cid) {
+            cat_ids.push(siblings[i].attributes.cid);
+        }
+    }
+
+    // no category
+    if (cat_ids.length == 0) {
+        return;
+    }
+    // only one category
+    if (cat_ids.length == 1) {
+        FJSuperSort.NodeRightMain(node, siblings[0]);
+    }
+    // many categories
+    else {
+        FJSuperSort.selected_cat_id = -1;
+        jQuery.fn.mtDialog.open('<mt:var name="script_url">?__mode=fjss_select_category&blog_id=<mt:var name="blog_id">&type=<mt:var name="class_name">&cat_ids=' + cat_ids.join(','));
+        setTimeout(FJSuperSort.NodeRightPolling, 100);
+    }
+};
+
+FJSuperSort.NodeRightPolling = function() {
+    // canceled
+    if (FJSuperSort.selected_cat_id == 0) {
+        return;
+    }
+    // while selecting
+    else if (FJSuperSort.selected_cat_id == -1) {
+        setTimeout(FJSuperSort.NodeRightPolling, 100);
+    }
+    // selected
+    else {
+        var node = FJSuperSort.node_right_from_node;
+        var parent = node.parentNode;
+        var siblings = node.parentNode.childNodes;
+        for (var i = 0, j = parent.attributes.cat_count; i < j; i++) {
+            if (siblings[i].attributes.cid == FJSuperSort.selected_cat_id) {
+                FJSuperSort.NodeRightMain(node, siblings[i]);
+                break;
+            }
+        }
+    }
+};
+
+FJSuperSort.NodeRightMain = function(node, newParent) {
+    newParent.expand(false, false, function() {
+        var oldParent = node.parentNode;
+        if (node.attributes.cls == 'folder') {
+            newParent.insertBefore(node, newParent.childNodes[newParent.attributes.cat_count]);
+        }
+        else if (node.attributes.cls == 'file') {
+            newParent.appendChild(node);
+        }
+        FJSuperSort.onMoveNode(node.getOwnerTree(), node, oldParent, newParent, null);
+    });
+};
+
+FJSuperSort.NodeUp = function(node) {
+    if (node.previousSibling &&
+        node.attributes.cls == node.previousSibling.attributes.cls) {
+        var prevNode = node.previousSibling
+        node.parentNode.insertBefore(node, prevNode);
+        FJSuperSort.onMoveNode(node.getOwnerTree(), node, node.parentNode, node.parentNode, null);
+    }
+}
+
+FJSuperSort.NodeDown = function(node) {
+    if (node.nextSibling &&
+        node.attributes.cls == node.nextSibling.attributes.cls) {
+        node.parentNode.insertBefore(node.nextSibling, node);
+        FJSuperSort.onMoveNode(node.getOwnerTree(), node, node.parentNode, node.parentNode, null);
+    }
+}
+
+FJSuperSort.NodeTop = function(node) {
+    if (node.attributes.cls == 'folder' &&
+         node.attributes.cid != node.parentNode.firstChild.attributes.cid) {
+        node.parentNode.insertBefore(node, node.parentNode.firstChild);
+        FJSuperSort.onMoveNode(node.getOwnerTree(), node, node.parentNode, node.parentNode, null);
+    }
+    else if (node.attributes.cls == 'file' &&
+             node.parentNode.attributes.entry_count > 1 &&
+             node.attributes.eid != node.parentNode.childNodes[node.parentNode.attributes.cat_count].eid) {
+        node.parentNode.insertBefore(node, node.parentNode.childNodes[node.parentNode.attributes.cat_count]);
+        FJSuperSort.onMoveNode(node.getOwnerTree(), node, node.parentNode, node.parentNode, null);
+    }
+}
+
+FJSuperSort.NodeBottom = function(node) {
+    if (node.attributes.cls == 'file' &&
+         node.attributes.eid != node.parentNode.lastChild.attributes.eid) {
+        node.parentNode.appendChild(node);
+        FJSuperSort.onMoveNode(node.getOwnerTree(), node, node.parentNode, node.parentNode, null);
+    }
+    else if (node.attributes.cls == 'folder' &&
+             node.parentNode.attributes.cat_count > 1 &&
+             node.attributes.cid != node.parentNode.childNodes[node.parentNode.attributes.cat_count - 1].cid) {
+        node.parentNode.insertBefore(node, node.parentNode.childNodes[node.parentNode.attributes.cat_count]);
+        FJSuperSort.onMoveNode(node.getOwnerTree(), node, node.parentNode, node.parentNode, null);
+    }
+}
+
+FJSuperSort.OpenMenu = function(node) {
+    FJSuperSort.clickedNode = node;
+    var ctxMenuNode = Ext.get(node.ctxMenuNode);
+    var menuLeft = ctxMenuNode.getLeft();
+    var menuTop = ctxMenuNode.getBottom();
+    if (node.attributes.id == 'root') {
+        FJSuperSort.rootMenu.showAt([menuLeft, menuTop]);
+    }
+    else if (node.attributes.cls == 'folder') {
+        FJSuperSort.catMenu.showAt([menuLeft, menuTop]);
+    }
+    else {
+        var viewItem = FJSuperSort.entryMenu.findById('view_entry');
+        if (node.attributes.status == 2) {
+            viewItem.enable();
+        }
+        else {
+            viewItem.disable();
+        }
+        FJSuperSort.entryMenu.showAt([menuLeft, menuTop]);
+    }
+}
+FJSuperSort.CreateRootCategory = function() {
+    FJSuperSort.rootMenu.hide();
+    if (!FJSuperSort.EditCheck()) {
+        return;
+    }
+    location.href = '<mt:var name="script_url">?__mode=view&_type=<mt:var name="class_name">&blog_id=<mt:var name="blog_id">';
+}
+
+FJSuperSort.CreateRootEntry = function() {
+    FJSuperSort.rootMenu.hide();
+    if (!FJSuperSort.EditCheck()) {
+        return;
+    }
+    location.href = '<mt:var name="script_url">?__mode=view&_type=<mt:var name="entry_class_name">&blog_id=<mt:var name="blog_id">';
+}
+
+FJSuperSort.ViewEntry = function() {
+    FJSuperSort.entryMenu.hide();
+    var attr = FJSuperSort.clickedNode.attributes;
+    window.open(attr.permalink, '_blank');
+}
+
+FJSuperSort.EditEntry = function() {
+    FJSuperSort.entryMenu.hide();
+    if (!FJSuperSort.EditCheck()) {
+        return;
+    }
+    var entry_id = FJSuperSort.clickedNode.attributes.eid;
+    location.href = '<mt:var name="script_url">?__mode=view&_type=<mt:var name="entry_class_name">&blog_id=<mt:var name="blog_id">&id=' + entry_id;
+}
+
+FJSuperSort.DeleteEntry = function() {
+    FJSuperSort.entryMenu.hide();
+    if (!FJSuperSort.EditCheck()) {
+        return false;
+    }
+    var entry_id = FJSuperSort.clickedNode.attributes.eid;
+    jQuery('#delete_entry_id').attr({ value : entry_id });
+    if (confirm('<__trans phrase="Are you sure to delete this [_1] ?" params="<mt:var name="entry_single">">')) {
+        document.delete_entry.submit();
+    }
+    return false;
+}
+
+FJSuperSort.EditCategory = function() {
+    FJSuperSort.catMenu.hide();
+    if (!FJSuperSort.EditCheck()) {
+        return;
+    }
+    var cat_id = FJSuperSort.clickedNode.attributes.cid;
+    location.href = '<mt:var name="script_url">?__mode=view&_type=<mt:var name="class_name">&blog_id=<mt:var name="blog_id">&id=' + cat_id;
+}
+
+FJSuperSort.DeleteCategory = function() {
+    var is_ok;
+
+    FJSuperSort.catMenu.hide();
+    if (!FJSuperSort.EditCheck()) {
+        return false;
+    }
+    var cat_id = FJSuperSort.clickedNode.attributes.cid;
+//    jQuery('#delete_cat_id').attr({ value : cat_id });
+    if (FJSuperSort.clickedNode.attributes.entry_count ||
+        FJSuperSort.clickedNode.attributes.cat_count) {
+        is_ok = confirm('<__trans phrase="This [_1] includes [_2] or sub [_3]." params="<mt:var name="cat_single">%%<mt:var name="entry_plural">%%<mt:var name="cat_plural">">\n<__trans phrase="Are you sure to delete this [_1] ?" params="<mt:var name="cat_single">">');
+    }
+    else {
+        is_ok = confirm('<__trans phrase="Are you sure to delete this [_1] ?" params="<mt:var name="cat_single">">');
+    }
+    if (is_ok) {
+        var req_url = '<mt:var name="mt_url">';
+        req_url += '?__mode=fjss_get_child_categories&type=<mt:var name="class_name">';
+        req_url += '&id=' + cat_id;
+        req_url += '&blog_id=<mt:var name="blog_id">';
+        jQuery.ajax({
+            type : 'GET',
+            url : req_url,
+            success : FJSuperSort.DeleteCategoryMain,
+            error : FJSuperSort.DeleteCategoryError
+        });
+    }
+    return false;
+}
+
+FJSuperSort.DeleteCategoryMain = function(data) {
+    var cat_ids = jQuery.secureEvalJSON(data);
+    console.log(cat_ids);
+    var html = '';
+    for (var i = 0, j = cat_ids.ids.length; i < j; i++) {
+        html += '<input type="hidden" name="id" value="' + cat_ids.ids[i] + '" />';
+    }
+    jQuery('#delete_cat_blog_id').after(html);
+    document.delete_category.submit();
+}
+
+FJSuperSort.DeleteCategoryError = function(data) {
+}
+
+FJSuperSort.CreateCategory = function() {
+    FJSuperSort.catMenu.hide();
+    if (!FJSuperSort.EditCheck()) {
+        return false;
+    }
+    var cat_id = FJSuperSort.clickedNode.attributes.cid;
+    location.href = '<mt:var name="script_url">?__mode=view&_type=<mt:var name="class_name">&blog_id=<mt:var name="blog_id">&init_parent=' + cat_id;
+}
+
+FJSuperSort.CreateEntryInCategory = function() {
+    FJSuperSort.catMenu.hide();
+    if (!FJSuperSort.EditCheck()) {
+        return false;
+    }
+    var cat_id = FJSuperSort.clickedNode.attributes.cid;
+    location.href = '<mt:var name="script_url">?__mode=view&_type=<mt:var name="entry_class_name">&blog_id=<mt:var name="blog_id">&init_cat_id=' + cat_id;
+}
+
+FJSuperSort.EditCheck = function() {
+    if (FJSuperSort.isDirty) {
+        alert('<__trans phrase="Sort order is not saved yet. Please save.">');
+        return false;
+    }
+    return true;
+}
+
+FJSuperSort.Save = function() {
+    var _id;
+    jQuery('.primary-button').hide();
+    jQuery('#sort').hide();
+    jQuery('#sort').after('<p><__trans phrase="Now saving sort order"> <img src="<mt:var name="static_uri">/plugins/SuperSort/images/loading.gif" alt="" width="16" height="16" /></p>');
+    FJSuperSort.is_change_saved = false;
+    FJSuperSort.is_save_end = false;
+    for (_id in FJSuperSort.cat_move_data) {
+        FJSuperSort.move_data.push({
+            type : 'category',
+            id : _id,
+            old_cat : FJSuperSort.cat_move_data[_id].old_cat,
+            new_cat : FJSuperSort.cat_move_data[_id].new_cat
+        });
+    }
+    for (_id in FJSuperSort.entry_move_data) {
+        FJSuperSort.move_data.push({
+            type : 'entry',
+            id : _id,
+            old_cat : FJSuperSort.entry_move_data[_id].old_cat,
+            new_cat : FJSuperSort.entry_move_data[_id].new_cat
+        });
+    }
+    jQuery.fn.mtDialog.open('<mt:var name="script_url">?__mode=fjss_save_start&blog_id=<mt:var name="blog_id">&type=<mt:var name="class_name">');
+    setTimeout(FJSuperSort.SaveWait, 100);
+    return false;
+};
+
+FJSuperSort.SaveEnd = function() {
+    alert('save end');
+    location.href = '<mt:var name="script_url">?__mode=fjss_sort_order&blog_id=<mt:var name="blog_id">&type=<mt:var name="class_name">&saved=1';
+}
+
+FJSuperSort.SaveWait = function() {
+    if (FJSuperSort.is_save_end) {
+        location.href = '<mt:var name="script_url">?__mode=fjss_sort_order&blog_id=<mt:var name="blog_id">&type=<mt:var name="class_name">&saved=1';
+    }
+    else {
+        setTimeout(FJSuperSort.SaveWait, 100);
+    }
+};
+
+Ext.onReady(function(){
+    FJSuperSort.Initialize();
+});
+//]]>
+</script>
+
+<form name="delete_category" id="delete_category" method="post" action="<mt:var name="mt_url">" style="display : none;">
+    <input type="hidden" name="__mode" value="delete" />
+    <input type="hidden" name="_type" value="<mt:var name="class_name">" />
+    <input type="hidden" name="blog_id" id="delete_cat_blog_id" value="<mt:var name="blog_id">" />
+    <input type="hidden" name="magic_token" value="<mt:var name="magic_token">" />
+    <input type="hidden" name="return_args" value="__mode=fjss_sort_order&blog_id=<mt:var name="blog_id">&type=<mt:var name="class_name">&delete_type=<mt:var name="class_name">" />
+</form>
+
+<form name="delete_entry" id="delete_entry" method="post" action="<mt:var name="mt_url">" style="display : none;">
+    <input type="hidden" name="__mode" value="delete" />
+    <input type="hidden" name="_type" value="<mt:var name="entry_class_name">" />
+    <input type="hidden" name="id" id="delete_entry_id" value="" />
+    <input type="hidden" name="blog_id" value="<mt:var name="blog_id">" />
+    <input type="hidden" name="magic_token" value="<mt:var name="magic_token">" />
+    <input type="hidden" name="return_args" value="__mode=fjss_sort_order&blog_id=<mt:var name="blog_id">&type=<mt:var name="class_name">&delete_type=<mt:var name="entry_class_name">" />
+</form>
+</mt:if>
+
+<mt:include name="include/footer.tmpl">

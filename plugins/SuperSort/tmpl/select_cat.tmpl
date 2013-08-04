@@ -1,0 +1,51 @@
+<$mt:setvar name="screen_type" value="dialog-screen fjss_select_cat_dialog"$>
+<mt:setvarblock name="page_title"><__trans phrase="Select [_1] to move" params="<mt:var name="cat_single">"></mt:setvarblock>
+<$mt:include name="dialog/header.tmpl"$>
+
+<script type="text/javascript">
+//<[!CDATA[
+function cancelSelectCategory() {
+    var FJSuperSort = window.parent.FJSuperSort;
+    FJSuperSort.selected_cat_id = 0;
+    parent.jQuery.fn.mtDialog.close();
+//    closeDialog();
+}
+
+function selectCategory() {
+    var FJSuperSort = window.parent.FJSuperSort;
+    var sel = document.select_cat.cat;
+    FJSuperSort.selected_cat_id = sel.options[sel.selectedIndex].value;
+    parent.jQuery.fn.mtDialog.close();
+//    closeDialog();
+}
+//]]>
+</script>
+
+<form name="select_cat">
+    <select name="cat" id="cat" size="10" style="width : 600px; height : 360px;">
+        <mt:loop name="cat_data">
+            <option value="<mt:var name="cat_id">"<mt:if name="__first__"> selected="selected"</mt:if>><mt:var name="cat_label"></option>
+        </mt:loop>
+    </select>
+</form>
+
+<div class="actions-bar">
+    <div class="actions-bar-inner pkg actions">
+        <button
+            type="submit"
+            accesskey="x"
+            class="cancel button action"
+            title="<__trans phrase="Cancel (x)">"
+            onclick="cancelSelectCategory();"
+            ><__trans phrase="Cancel"></button>
+        <button
+            type="submit"
+            accesskey="s"
+            class="primary button action"
+            title="<__trans phrase="Confirm (s)">"
+            onclick="selectCategory();"
+            ><__trans phrase="Confirm"></button>
+    </div>
+</div>
+
+<mt:include name="dialog/footer.tmpl">

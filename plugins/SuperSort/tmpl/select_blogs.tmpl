@@ -1,0 +1,92 @@
+<mt:setvarblock name="page_title"><__trans phrase="Select websites / blogs"></mt:setvarblock>
+<mt:setvarblock name="html_head" append="1">
+<script type="text/javascript" src="<mt:var name="static_uri">js/dialog.js"></script>
+<script type="text/javascript">
+  /* <![CDATA[ */
+    var dlg;
+    function dialogClose(data) {
+        if (!data) {
+            parent.jQuery.fn.mtDialog.close();
+            return;
+        }
+        var f = document.forms['select_weblog_form'];
+        var sel = dlg.panel.tableSelect.selected();
+        f.submit();
+    }
+
+    function init() {
+        isModal = getByID("select-weblog-dialog");
+        dlg = new Dialog.Simple("select-weblog");
+        var panel = new ListingPanel("blog", "website");
+        dlg.panel = panel;
+        panel.parent = dlg;
+        dlg.open({}, dialogClose);
+    }
+  /* ]]> */
+</script>
+</mt:setvarblock>
+
+<mt:setvarblock name="action_buttons">
+      <button
+         type="submit"
+         accesskey="s"
+         title="<__trans phrase="Continue (s)">"
+         class="continue action primary button next"
+         disabled="true">
+        <__trans phrase="Continue"></button>
+      <button
+         type="submit"
+         accesskey="x"
+         class="cancel action button mt-close-dialog"
+         title="<__trans phrase="Cancel (x)">">
+        <__trans phrase="Cancel"></button>
+</mt:setvarblock>
+
+<mt:include name="dialog/header.tmpl">
+
+<div id="select-weblog-dialog" class="modal_width">
+<div id="blog-panel" class="panel first-child last-child">
+<div id="selector" class="selector listing list-data list-multi">
+
+    <form id="select_weblog_form" name="select_weblog_form" class="listing-form" action="<$mt:var name="mt_url"$>" method="post" onsubmit="return this['__mode'] ? true : false">
+        <input type="hidden" name="__mode" value="fjss_move_start" />
+
+<mtapp:listing empty_message="$empty_message" show_actions="0" hide_pager="1">
+    <mt:if name="__first__">
+        <thead>
+            <tr>
+                <th class="col head cb"><input type="checkbox" name="id-head" value="all" class="select" /></th>
+                <th class="col head primary bloglist_name"><span class="col-label"><__trans phrase="Website / Blog"></span></th>
+                <th class="col head primary bloglist_description"><span class="col-label"><__trans phrase="Description"></span></th>
+            </tr>
+        </thead>
+        <tbody>
+    </mt:if>
+            <tr class="<mt:if name="__odd__">odd<mt:else>even</mt:if>">
+                <td class="col cb"><input type="checkbox" name="id" id="id-<mt:var name="id">" class="select blog-ids" value="<mt:var name="id">" /></td>
+                <td class="col panel-label bloglist_name"><label><span class="cf-scope sticky-label <mt:if name="is_blog">blog<mt:else>website</mt:if>"><mt:if name="is_blog"><__trans phrase="blog"><mt:else><__trans phrase="website"></mt:if></span> <mt:var name="name"></label></td>
+                <td class="col panel-description bloglist_description"><label><mt:var name="description"></label></td>
+            </tr>
+    <mt:if name="__last__">
+        </tbody>
+    </mt:if>
+</mtapp:listing>
+
+<div class="actions-bar actions-bar-bottom line">
+  <mt:var name="action_buttons">
+</div>
+
+    </form>
+
+</div>
+</div>
+</div>
+
+<mt:setvarblock name="jq_js_include" append="1">
+jQuery(function() {
+    jQuery('.continue').addClass('disabled');
+    init();
+});
+</mt:setvarblock>
+
+<mt:include name="dialog/footer.tmpl">

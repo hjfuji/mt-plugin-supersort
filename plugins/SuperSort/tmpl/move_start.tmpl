@@ -1,0 +1,85 @@
+<$mt:setvar name="screen_type" value="dialog-screen fjss_init"$>
+<mt:setvarblock name="page_title"><__trans phrase="Move order info to Movable Type 5.1"></mt:setvarblock>
+<mt:setvarblock name="html_head">
+<style type="text/css">
+ul#msg li {
+    line-height : 1.2em;
+    margin-bottom : 2px;
+}
+div#msg0 {
+    border : 1px solid #cccccc;
+    height :300px;
+    overflow : scroll;
+}
+</style>
+</mt:setvarblock>
+
+<$mt:include name="dialog/header.tmpl"$>
+
+<div id="msg0">
+<ul id="msg">
+</ul>
+</div>
+<div class="actions-bar actions-bar-bottom line">
+      <button
+         type="submit"
+         onclick="parent.jQuery.fn.mtDialog.close();"
+         id="close-button"
+         accesskey="s"
+         title="<__trans phrase="Close (x)">"
+         class="continue action primary button next">
+        <__trans phrase="Close"></button>
+</div>
+
+<script type="text/javascript">
+//<![CDATA[
+jQuery(function() {
+    var blog_ids = [ <$mt:var name="blog_ids"$> ];
+    var blog_count = <$mt:var name="count"$>;
+    var ptr = 0;
+    Lexicon["Moved sort order information of [_1] '[_2]'."] = "<__trans phrase="Moved sort order information of [_1] '[_2]'." params="[_1]%%[_2]">";
+    Lexicon["Error occured : [_1]."] = "<__trans phrase="Error occured : [_1]." params="[_1]">";
+
+    moveCatFldOrder();
+
+    function moveCatFldOrder() {
+        var url = '<$mt:var name="mt_url"$>?__mode=fjss_move&blog_id=';
+        url += blog_ids[ptr];
+        jQuery.ajax({
+            url : url,
+            success : moveSuccess,
+            error : moveError
+        });
+    }
+
+    function moveSuccess(status, textStatus, jqXHR) {
+        if (status.ok) {
+            ptr++;
+            var add_msg = trans("Moved sort order information of [_1] '[_2]'.", (status.is_blog ? '<__trans phrase="blog">' : '<__trans phrase="website">'), status.blog_name);
+            jQuery('#msg').append('<li>' + add_msg + '</li>');
+            jQuery('#msg0')[0].scrollTop = jQuery('#msg')[0].scrollHeight;
+            if (ptr < blog_count) {
+                moveCatFldOrder();
+            }
+            else {
+                jQuery('#msg').append('<li><__trans phrase="Moving sort order information finished."></li>');
+                jQuery('#msg0')[0].scrollTop = jQuery('#msg')[0].scrollHeight;
+            }
+        }
+        else {
+            var err_msg = trans("Error occured : [_1].", status.error);
+            jQuery('#msg').append('<li>' + err_msg + '</li>');
+            jQuery('#msg0')[0].scrollTop = jQuery('#msg')[0].scrollHeight;
+        }
+    }
+
+    function moveError(data, textStatus, jqXHR) {
+        var err_msg = trans("Error occured : [_1].", textStatus);
+        jQuery('#msg').append('<li>' + err_msg + '</li>');
+        jQuery('#msg0')[0].scrollTop = jQuery('#msg')[0].scrollHeight;
+    }
+});
+//]]>
+</script>
+
+<$mt:include name="dialog/footer.tmpl"$>

@@ -1,0 +1,9 @@
+#sort {
+    margin : 0.5em 0;
+
+img.btnicon {
+    margin-left : 2px;
+}
+#selector-nav-list .current a {
+    font-weight : bold;
+}

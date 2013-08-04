@@ -1,0 +1,97 @@
+<mt:setvarblock name="page_title"><__trans phrase="Initialization of sort order of [_1] and [_2]" params="<mt:var name="cat_plural">%%<mt:var name="entry_plural">"></mt:setvarblock>
+
+<mt:setvartemplate name="action_buttons">
+    <mtapp:setting
+        id="submit">
+    <button
+        type="submit"
+        accesskey="s"
+        title="<__trans phrase="Confirm">"
+        class="primary button action"
+        ><__trans phrase="Confirm"></button>
+    </mtapp:setting>
+</mt:setvartemplate>
+
+<mt:include name="include/header.tmpl">
+
+<form method="post" name="sort_init" action="<mt:var name="script_url">" onsubmit="return initStart();">
+    <fieldset>
+
+    <mtapp:setting
+        id="base_cat"
+        label="<__trans phrase="Base [_1] to initialize sort order." params="<mt:var name="cat_single">">">
+        <select name="base_cat" id="base_cat">
+            <option value="0" selected="selected"><__trans phrase="Root [_1]" params="<mt:var name="cat_single">"></option>
+            <mt:loop name="cats_data"><option value="<mt:var name="cat_id">">&nbsp;&nbsp;<mt:var name="cat_label"></option>
+            </mt:loop>
+        </select>
+    </mtapp:setting>
+
+    <mtapp:setting
+        id="init_recursive"
+        label="<__trans phrase="Initialize sub [_1] recursively." params="<mt:var name="cat_plural">">">
+        <input type="checkbox" name="init_recursive" id="init_recursive" checked="checked" value="1"> <__trans phrase="Initialize sub [_1] recursively." params="<mt:var name="cat_plural">">
+    </mtapp:setting>
+
+    <mtapp:setting
+        id="sort_cat"
+        label="<__trans phrase="Sort order of [_1]." params="<mt:var name="cat_plural">">">
+        <select name="sort_cat" id="sort_cat">
+            <option value="mt51"><__trans phrase="Same as [_1] order of Movable Type 5.1" params="<mt:var name="cat_single">"></option>
+            <option value="label_asc"><__trans phrase="By [_1] label" params="<mt:var name="cat_single">"></option>
+            <option value="label_desc"><__trans phrase="By [_1] label (reverse)" params="<mt:var name="cat_single">"></option>
+            <option value="current"><__trans phrase="Keep current order if possible"></option>
+            <option value="none"><__trans phrase="No sort"></option>
+        </select>
+    </mtapp:setting>
+
+    <mtapp:setting
+        id="sort_entry"
+        label="<__trans phrase="Sort order of [_1]." params="<mt:var name="entry_plural">">">
+        <select name="sort_entry" id="sort_entry">
+            <option value="date_asc"><__trans phrase="By [_1] date" params="<mt:var name="entry_single">"></option>
+            <option value="date_desc"><__trans phrase="By [_1] date (reverse)" params="<mt:var name="entry_single">"></option>
+            <option value="title_asc"><__trans phrase="By [_1] title" params="<mt:var name="entry_single">"></option>
+            <option value="title_desc"><__trans phrase="By [_1] title (reverse)" params="<mt:var name="entry_single">"></option>
+            <option value="current"><__trans phrase="Keep current order if possible"></option>
+            <option value="none"><__trans phrase="No sort"></option>
+        </select>
+    </mtapp:setting>
+
+    <mt:include name="include/actions_bar.tmpl" bar_position="bottom" hide_pager="1">
+    </fieldset>
+</form>
+
+<mt:if name="type" eq="category">
+<p><a href="<mt:var name="script_url">?__mode=fjss_init_start&amp;blog_id=<mt:var name="blog_id">&amp;type=folder"><__trans phrase="Initialize sort order of folders and pages"></a></p>
+<mt:else>
+<p><a href="<mt:var name="script_url">?__mode=fjss_init_start&amp;blog_id=<mt:var name="blog_id">&amp;type=category"><__trans phrase="Initialize sort order of categories and entries"></a></p>
+</mt:if>
+
+<script type="text/javascript">
+//<![CDATA[
+window.onload = function() {
+    alert('<__trans phrase="Many data are modified by this operation.\nFor an unexpected situation, please back up all data by all means.">');
+}
+
+function initStart() {
+    var blog_id = <mt:var name="blog_id">;
+    var type = '<mt:var name="type">';
+    var base_cat = document.sort_init.base_cat.value;
+    var recursive = document.sort_init.init_recursive.checked ? 1 : 0;
+    var sort_cat = document.sort_init.sort_cat.value;
+    var sort_entry = document.sort_init.sort_entry.value;
+    var params = 'blog_id=' + blog_id;
+    params += '&type=' + type;
+    params += '&base_cat=' + base_cat;
+    params += '&recursive=' + recursive;
+    params += '&sort_cat=' + sort_cat;
+    params += '&sort_entry=' + sort_entry;
+    jQuery.fn.mtDialog.open('<mt:var name="script_url">?__mode=fjss_init_main&' + params);
+//    openDialog(false,'fjss_init_main', params);
+    return false;
+}
+//]]>
+</script>
+
+<mt:include name="include/footer.tmpl">

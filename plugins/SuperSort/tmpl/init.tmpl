@@ -1,0 +1,196 @@
+<$mt:setvar name="screen_type" value="dialog-screen fjss_init"$>
+<mt:setvarblock name="page_title"><__trans phrase="Initialization of sort order of [_1] and [_2]" params="<mt:var name="cat_plural">%%<mt:var name="entry_plural">"></mt:setvarblock>
+<$mt:include name="dialog/header.tmpl"$>
+
+<div id="msg" style="border : 1px solid black; height :360px; overflow : scroll;">
+</div>
+
+<div class="actions-bar" id="action_bar" style="display : none;">
+    <div class="actions-bar-inner pkg actions">
+        <button
+            type="submit"
+            accesskey="x"
+            class="cancel button action"
+            onclick="parent.jQuery.fn.mtDialog.close();"
+            title="<__trans phrase="Close (x)">"
+            ><__trans phrase="Close"></button>
+    </div>
+</div>
+
+<!--<script type="text/javascript" src="<mt:var name="static_uri">plugins/SuperSort/js/jquery.js"></script>-->
+
+<script type="text/javascript">
+//<![CDATA[
+var FJSSInitMain = {};
+
+FJSSInitMain.Start = function() {
+    FJSSInitMain.blog_id = <mt:var name="blog_id">;
+    FJSSInitMain.type = '<mt:var name="type">';
+    FJSSInitMain.sort_cat = '<mt:var name="sort_cat">';
+    FJSSInitMain.sort_entry = '<mt:var name="sort_entry">';
+    FJSSInitMain.per_init = <mt:var name="per_init">;
+    FJSSInitMain.cat_ptr = 0;
+    FJSSInitMain.entry_ptr = 0;
+    FJSSInitMain.entry_count = 0;
+
+    FJSSInitMain.cats = [
+<mt:loop name="cats_data">
+        { id : <mt:var name="cat_id">, label : '<mt:var name="cat_label" encode_js="1">' }<mt:unless name="__last__">,</mt:unless>
+</mt:loop>
+    ];
+
+    if (FJSSInitMain.cats.length) {
+        setTimeout(FJSSInitMain.SortCategory, 100);
+    }
+    else {
+        FJSSInitMain.SortEnd();
+    }
+}
+
+FJSSInitMain.SortCategory = function() {
+    var parent = FJSSInitMain.cats[FJSSInitMain.cat_ptr].id;
+    var req_url = '<mt:var name="mt_uri">';
+    req_url += '?__mode=fjss_init_cat_order';
+    req_url += '&type=' + FJSSInitMain.type;
+    req_url += '&blog_id=' + FJSSInitMain.blog_id;
+    req_url += '&parent=' + parent;
+    req_url += '&sort=' + FJSSInitMain.sort_cat;
+    jQuery.ajax({ type : 'GET',
+             url : req_url,
+             success : FJSSInitMain.SortCategorySuccess,
+             error : FJSSInitMain.SortCategoryError
+           });
+}
+
+FJSSInitMain.SortCategorySuccess = function(html) {
+    if (html == -1) {
+        alert('<__trans phrase="Initializing sort order failured.">');
+        FJSSInitMain.SortErrorEnd();
+    }
+    jQuery('#msg').append('<span><__trans phrase="Sort order of sub [_1] is initialized" params="<mt:var name="cat_plural">"> : ' + FJSSInitMain.cats[FJSSInitMain.cat_ptr].label + '</span><br />');
+    jQuery('#msg')[0].scrollTop = jQuery('#msg')[0].scrollHeight;
+    if (html > 0 && FJSSInitMain.sort_entry != 'none') {
+        FJSSInitMain.entry_ptr = 0;
+        FJSSInitMain.entry_count = html;
+        setTimeout(FJSSInitMain.SortEntry, 100);
+    }
+    else {
+        FJSSInitMain.cat_ptr++;
+        if (FJSSInitMain.cat_ptr < FJSSInitMain.cats.length) {
+            setTimeout(FJSSInitMain.SortCategory, 100);
+        }
+        else {
+            FJSSInitMain.SaveMT5Order();
+//            FJSSInitMain.SortEnd();
+        }
+    }
+}
+
+FJSSInitMain.SortCategoryError = function(html) {
+    alert('<__trans phrase="Initializing sort order failured.">');
+    FJSSInitMain.SortErrorEnd();
+}
+
+FJSSInitMain.SortEntry = function() {
+    var parent = FJSSInitMain.cats[FJSSInitMain.cat_ptr].id;
+    var req_url = '<mt:var name="mt_uri">';
+    req_url += '?__mode=fjss_init_entry_order';
+    req_url += '&type=' + FJSSInitMain.type;
+    req_url += '&blog_id=' + FJSSInitMain.blog_id;
+    req_url += '&parent=' + parent;
+    req_url += '&offset=' + FJSSInitMain.entry_ptr;
+    req_url += '&sort=' + FJSSInitMain.sort_entry;
+    jQuery.ajax({ type : 'GET',
+             url : req_url,
+             success : FJSSInitMain.SortEntrySuccess,
+             error : FJSSInitMain.SortEntryError
+           });
+}
+
+FJSSInitMain.SortEntrySuccess = function(html) {
+    if (html != 'ok') {
+        alert('<__trans phrase="Initializing sort order failured.">');
+        FJSSInitMain.SortErrorEnd();
+    }
+    start = FJSSInitMain.entry_ptr + 1;
+    if (start + FJSSInitMain.per_init > FJSSInitMain.entry_count) {
+        end = FJSSInitMain.entry_count;
+    }
+    else {
+        end = FJSSInitMain.entry_ptr + FJSSInitMain.per_init;
+    }
+    jQuery('#msg').append('<span><__trans phrase="Sort order of [_1]" params="<mt:var name="entry_plural">"> ' + start + ' - ' + end + ' <__trans phrase="is initialized"> : ' + FJSSInitMain.cats[FJSSInitMain.cat_ptr].label + '</span><br />');
+    jQuery('#msg')[0].scrollTop = jQuery('#msg')[0].scrollHeight;
+
+    if (end < FJSSInitMain.entry_count) {
+        FJSSInitMain.entry_ptr += FJSSInitMain.per_init;
+        setTimeout(FJSSInitMain.SortEntry, 100);
+    }
+    else {
+        FJSSInitMain.cat_ptr++;
+        if (FJSSInitMain.cat_ptr < FJSSInitMain.cats.length) {
+            setTimeout(FJSSInitMain.SortCategory, 100);
+        }
+        else {
+            FJSSInitMain.SaveMT5Order();
+//            FJSSInitMain.SortEnd();
+        }
+    }
+}
+
+FJSSInitMain.SortEntryError = function(html) {
+    alert('<__trans phrase="Initializing sort order failured.">');
+    FJSSInitMain.SortErrorEnd();
+}
+
+FJSSInitMain.SaveMT5Order = function() {
+    if (FJSSInitMain.cats.length) {
+        var req_url = '<mt:var name="mt_uri">';
+        req_url += '?__mode=fjss_init_save_mt5_order';
+        req_url += '&type=' + FJSSInitMain.type;
+        req_url += '&blog_id=' + FJSSInitMain.blog_id;
+        jQuery.ajax({
+            type : 'GET',
+            url : req_url,
+            success : FJSSInitMain.SaveMT5OrderSuccess,
+            error : FJSSInitMain.SaveMT5OrderError
+        });
+    }
+    else {
+        FJSSInitMain.SortEnd();
+    }
+}
+
+FJSSInitMain.SaveMT5OrderSuccess = function(html) {
+    if (html != 'ok') {
+        alert('<__trans phrase="Initializing sort order failured.">');
+    }
+    else {
+        jQuery('#msg').append('<span><__trans phrase="Movable Type 5 native [_1] sort order was successfully saved." params="<mt:var name="cat_plural">"></span><br />');
+        jQuery('#msg')[0].scrollTop = jQuery('#msg')[0].scrollHeight;
+    }
+    FJSSInitMain.SortEnd();
+}
+
+FJSSInitMain.SaveMT5OrderError = function(html) {
+    alert('<__trans phrase="Initializing sort order failured.">');
+    FJSSInitMain.SortErrorEnd();
+}
+
+FJSSInitMain.SortEnd = function() {
+    jQuery('#msg').append('<span><__trans phrase="Initializing sort order is successfully finished."></span>');
+    jQuery('#msg')[0].scrollTop = jQuery('#msg')[0].scrollHeight;
+    jQuery('#action_bar').show();
+}
+
+FJSSInitMain.SortErrorEnd = function() {
+    jQuery('#msg').append('<span><__trans phrase="Initializing sort order failured."></span>');
+    jQuery('#msg')[0].scrollTop = jQuery('#msg')[0].scrollHeight;
+    jQuery('#action_bar').show();
+}
+
+window.onload = FJSSInitMain.Start;
+//]]>
+</script>
+
+<mt:include name="dialog/footer.tmpl">
