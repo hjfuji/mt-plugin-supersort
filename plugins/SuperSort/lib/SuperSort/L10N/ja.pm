@@ -162,4 +162,17 @@ use vars qw( %Lexicon );
     'Error occured : [_1].' => 'エラーが発生しました。 ： [_1]',
 );
 
+if (MT->version_number >= 6) {
+    $Lexicon{'entry'} = '記事';
+    $Lexicon{'entries'} = '記事';
+    $Lexicon{'This plugin enables you to sort entries, pages, categories and folders.'} = '記事／ウェブページ／カテゴリ／フォルダを並べ替える機能を追加します。';
+    $Lexicon{'Categories and entries'} = 'カテゴリと記事';
+    $Lexicon{'Initialize sort order of categories and entries'} = 'カテゴリと記事の並び順の初期化';
+    $Lexicon{'Enable to sort entries and categories'} = '記事とカテゴリの並べ替えを許可する';
+    $Lexicon{'Rebuild adjacent entries'} = '隣接する記事の再構築';
+    $Lexicon{'Rebuild adjacent entries after entry was saved'} = '記事を保存したときに、隣接する記事を再構築する';
+    $Lexicon{'Rebuild adjacent entries after entry was deleted'} = '記事を削除したときに、隣接する記事を再構築する';
+    $Lexicon{'Sort categories and entries'} = 'カテゴリと記事の並べ替え';
+}
+
 1;
