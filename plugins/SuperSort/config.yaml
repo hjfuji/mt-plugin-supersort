@@ -1,0 +1,201 @@
+#
+# SuperSort
+# 2008/10/20 1.00b1 Beta release
+# 2009/02/02 1.00rc1 Release Candidate 1
+# 2009/03/10 1.00rc2 Release Candidate 2
+# 2009/03/26 1.00
+# 2009/11/18 1.10b1 Beta release for Movable Type 5
+# 2010/02/15 1.10RC1 RC1 for Movable Type 5
+# 2010/05/15 1.10RC2 RC2 for Movable Type 5.02
+# 2010/06/01 1.10
+# 2011/05/26 1.20b1 Beta release for Movable Type 5.1
+# 2012/07/20 1.20b2 For Movable Type 5.2
+# 2013/08/22 1.20b3 For Movable Type 6
+#
+# Copyright(c) by H.Fujimoto
+#
+name: SuperSort
+id: super_sort
+key: super_sort
+version: 1.20b3
+author_name: <__trans phrase="Hajime Fujimoto">
+author_link: http://www.h-fj.com/blog/
+doc_link: http://www.h-fj.com/blog/mtplgdoc/supersort.php
+description: <__trans phrase="This plugin enables you to sort entries, pages, categories and folders.">
+#blog_config_template: \&blog_config
+system_config_template: system_config.tmpl
+settings:
+  fjss_enabled_sort_entry:
+    default: 0
+  fjss_enabled_sort_page:
+    default: 0
+  fjss_auto_rebuild_entry:
+    default: 1
+  fjss_auto_rebuild_page:
+    default: 1
+  fjss_auto_rebuild_after_delete_entry:
+    default: 1
+  fjss_auto_rebuild_after_delete_page:
+    default: 1
+  fjss_enabled_drag_and_drop:
+    default: 1
+schema_version: 1.01
+l10n_class: SuperSort::L10N
+tags:
+  block:
+    SortedEntries: $super_sort::SuperSort::ContextHandler::sorted_entries
+    SortedPages: $super_sort::SuperSort::ContextHandler::sorted_pages
+    SortedEntryPrevious: $super_sort::SuperSort::ContextHandler::sorted_entry_prev_next
+    SortedEntryNext: $super_sort::SuperSort::ContextHandler::sorted_entry_prev_next
+    SortedPagePrevious: $super_sort::SuperSort::ContextHandler::sorted_page_prev_next
+    SortedPageNext: $super_sort::SuperSort::ContextHandler::sorted_page_prev_next
+    SortedCategoryPrevious: $super_sort::SuperSort::ContextHandler::sorted_category_prev_next
+    SortedCategoryNext: $super_sort::SuperSort::ContextHandler::sorted_category_prev_next
+    SortedFolderPrevious: $super_sort::SuperSort::ContextHandler::sorted_folder_prev_next
+    SortedFolderNext: $super_sort::SuperSort::ContextHandler::sorted_folder_prev_next
+    SortedEntryCategories: $super_sort::SuperSort::ContextHandler::sorted_entry_categories
+    SortedTopLevelCategories: $super_sort::SuperSort::ContextHandler::sorted_top_level_categories
+    SortedSubCategories: $super_sort::SuperSort::ContextHandler::sorted_sub_categories
+    SortedTopLevelFolders: $super_sort::SuperSort::ContextHandler::sorted_top_level_folders
+    SortedSubFolders: $super_sort::SuperSort::ContextHandler::sorted_sub_folders
+  function:
+    EntryOrderNumber: $super_sort::SuperSort::ContextHandler::entry_order_number
+    PageOrderNumber: $super_sort::SuperSort::ContextHandler::entry_order_number
+    CategoryOrderNumber: $super_sort::SuperSort::ContextHandler::category_order_number
+    FolderOrderNumber: $super_sort::SuperSort::ContextHandler::folder_order_number
+object_types:
+  entry:
+    order_number: integer
+  placement:
+    order_number: integer
+  category:
+    order_number: integer
+callbacks:
+  MT::App::CMS::template_param.edit_category: $super_sort::SuperSort::Transformer::edit_category
+  MT::App::CMS::template_param.edit_folder: $super_sort::SuperSort::Transformer::edit_category
+  MT::App::CMS::template_param.edit_entry: $super_sort::SuperSort::Transformer::edit_entry
+  cms_pre_save.category:
+    priority: 1
+    code: >
+      sub { require SuperSort::CallBack; SuperSort::CallBack::pre_save_category('category', @_); }
+  cms_pre_save.folder:
+    priority: 1
+    code: >
+      sub { require SuperSort::CallBack; SuperSort::CallBack::pre_save_category('folder', @_); }
+  cms_post_save.category:
+    priority: 1
+    code: >
+      sub { require SuperSort::CallBack; SuperSort::CallBack::post_save_category('category', @_); }
+  cms_post_save.folder:
+    priority: 1
+    code: >
+      sub { require SuperSort::CallBack; SuperSort::CallBack::post_save_category('folder', @_); }
+  cms_post_delete.category:
+    priority: 1
+    code: >
+      sub { require SuperSort::CallBack; SuperSort::CallBack::post_delete_category('category', @_); }
+  cms_post_delete.folder:
+    priority: 1
+    code: >
+      sub { require SuperSort::CallBack; SuperSort::CallBack::post_delete_category('folder', @_); }
+  cms_pre_save.entry:
+    priority: 1
+    code: >
+      sub { require SuperSort::CallBack; SuperSort::CallBack::pre_save_entry('entry', @_); }
+  cms_pre_save.page:
+    priority: 1
+    code: >
+      sub { require SuperSort::CallBack; SuperSort::CallBack::pre_save_entry('page', @_); }
+  cms_post_save.entry:
+    priority: 1
+    code: >
+      sub { require SuperSort::CallBack; SuperSort::CallBack::post_save_entry('entry', @_); }
+  cms_post_save.page:
+    priority: 1
+    code: >
+      sub { require SuperSort::CallBack; SuperSort::CallBack::post_save_entry('page', @_); }
+  cms_post_delete.entry:
+    priority: 1
+    code: >
+      sub { require SuperSort::CallBack; SuperSort::CallBack::post_delete_entry('entry', @_); }
+  cms_post_delete.page:
+    priority: 1
+    code: >
+      sub { require SuperSort::CallBack; SuperSort::CallBack::post_delete_entry('page', @_); }
+  cms_delete_permission_filter.entry:
+    priority: 1
+    code: >
+      sub { require SuperSort::CallBack; SuperSort::Callback::pre_delete_entry(@_); }
+  cms_delete_permission_filter.page:
+    priority: 1
+    code: >
+      sub { require SuperSort::CallBack; SuperSort::Callback::pre_delete_entry(@_); }
+  cms_post_bulk_save.category:
+    priority: 1
+    code: >
+      sub { require SuperSort::CallBack; SuperSort::Callback::bulk_save_categories(@_); }
+  cms_post_bulk_save.folder:
+    priority: 1
+    code: >
+      sub { require SuperSort::CallBack; SuperSort::Callback::bulk_save_categories(@_); }
+applications:
+  cms:
+    menus:
+      entry:fjss_cat_entry:
+        label: Categories and entries
+        mode: fjss_sort_order
+        order: 350
+        args:
+          type: category
+        view: >
+          sub {
+            return (MT->version_number <= 6) ? [ 'blog', 'website' ] : 'blog';
+          }
+        permission: create_post,publish_post,edit_all_posts
+        condition: >
+          sub {
+            my $app = MT->instance;
+            my $plugin = MT->component('super_sort');
+            my $blog_id = $app->param('blog_id') or return 0;
+            return $plugin->get_config_value('fjss_enabled_sort_entry', 'blog:' . $blog_id);
+          }
+      page:fjss_fld_page:
+        label: Folders and pages
+        mode: fjss_sort_order
+        order: 350
+        args:
+          type: folder
+        view:
+          - blog
+          - website
+        permission: manage_pages
+        condition: >
+          sub {
+            my $app = MT->instance;
+            my $plugin = MT->component('super_sort');
+            my $blog_id = $app->param('blog_id') or return 0;
+            return $plugin->get_config_value('fjss_enabled_sort_page', 'blog:' . $blog_id);
+          }
+    methods:
+      fjss_init_start: $super_sort::SuperSort::Initialize::init_start
+      fjss_init_main: $super_sort::SuperSort::Initialize::init_main
+      fjss_init_cat_order: $super_sort::SuperSort::Initialize::init_cat_order
+      fjss_init_entry_order: $super_sort::SuperSort::Initialize::init_entry_order
+      fjss_init_save_mt5_order: $super_sort::SuperSort::Initialize::init_save_mt5_order
+      fjss_sort_order: $super_sort::SuperSort::Sort::start_sort_order
+      fjss_load_categories: $super_sort::SuperSort::Sort::load_categories
+      fjss_load_entries: $super_sort::SuperSort::Sort::load_entries
+      fjss_save_start: $super_sort::SuperSort::Sort::save_start
+      fjss_save_moved_data: $super_sort::SuperSort::Sort::save_moved_data
+      fjss_save_cat_order: $super_sort::SuperSort::Sort::save_cat_order
+      fjss_save_entry_order: $super_sort::SuperSort::Sort::save_entry_order
+      fjss_select_category: $super_sort::SuperSort::Sort::select_category
+      fjss_get_child_categories: $super_sort::SuperSort::Sort::get_child_categories
+      fjss_move_start: $super_sort::SuperSort::Initialize::move_start
+      fjss_select_blogs: $super_sort::SuperSort::Initialize::select_blogs
+      fjss_move: $super_sort::SuperSort::Initialize::move
+upgrade_functions:
+  remove_orphan_categories:
+    version_limit: '1.01',
+    code: >
+      sub { require SuperSort::Initialize; SuperSort::Initialize::remove_orphan_categories(@_); }
