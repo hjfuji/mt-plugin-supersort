@@ -196,6 +196,6 @@ applications:
       fjss_move: $super_sort::SuperSort::Initialize::move
 upgrade_functions:
   remove_orphan_categories:
-    version_limit: '1.01',
+    version_limit: 1.01
     code: >
       sub { require SuperSort::Initialize; SuperSort::Initialize::remove_orphan_categories(@_); }
