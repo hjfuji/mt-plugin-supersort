@@ -24,7 +24,8 @@ use SuperSort::Util qw( load_adjacent_entry left_join_placement );
 use constant DEBUG => 0;
 
 sub pre_save_category {
-    my ($plugin, $class_name, $eh, $app, $cat, $org_cat) = @_;
+    my ($class_name, $eh, $app, $cat, $org_cat) = @_;
+    my $plugin = MT->component('super_sort');
 
     if ($app->param('init_parent')) {
         $cat->parent($app->param('init_parent'));
@@ -38,7 +39,8 @@ sub pre_save_category {
 }
 
 sub post_save_category {
-    my ($plugin, $class_name, $eh, $app, $cat, $org_cat) = @_;
+    my ($class_name, $eh, $app, $cat, $org_cat) = @_;
+    my $plugin = MT->component('super_sort');
 
     my $entry_class_name = ($class_name eq 'category') ? 'entry' : 'page';
     return 1 if (!$plugin->get_config_value('fjss_enabled_sort_' . $entry_class_name, 'blog:' . $cat->blog_id));
@@ -105,7 +107,8 @@ sub post_save_category {
 }
 
 sub post_delete_category {
-    my ($plugin, $class_name, $eh, $app, $cat) = @_;
+    my ($class_name, $eh, $app, $cat) = @_;
+    my $plugin = MT->component('super_sort');
 
     my $entry_class = ($class_name eq 'category') ? 'entry' : 'page';
     return 1 if (!$plugin->get_config_value('fjss_enabled_sort_' . $entry_class, 'blog:' . $cat->blog_id));
@@ -120,7 +123,8 @@ sub post_delete_category {
 }
 
 sub pre_save_entry {
-    my ($plugin, $class_name, $eh, $app, $entry, $old_entry) = @_;
+    my ($class_name, $eh, $app, $entry, $old_entry) = @_;
+    my $plugin = MT->component('super_sort');
 
     return 1 if (!$plugin->get_config_value('fjss_enabled_sort_' . $class_name, 'blog:' . $entry->blog_id));
 
@@ -143,7 +147,8 @@ sub pre_save_entry {
 }
 
 sub post_save_entry {
-    my ($plugin, $class_name, $eh, $app, $entry, $old_entry) = @_;
+    my ($class_name, $eh, $app, $entry, $old_entry) = @_;
+    my $plugin = MT->component('super_sort');
 
     return 1 if (!$plugin->get_config_value('fjss_enabled_sort_' . $class_name, 'blog:' . $entry->blog_id));
 
@@ -254,7 +259,8 @@ sub post_save_entry {
 }
 
 sub pre_delete_entry {
-    my ($plugin, $eh, $app, $entry) = @_;
+    my ($eh, $app, $entry) = @_;
+    my $plugin = MT->component('super_sort');
 
     return 1 if (!$plugin->get_config_value('fjss_enabled_sort_' . $entry->class, 'blog:' . $entry->blog_id) ||
                  !$plugin->get_config_value('fjss_auto_rebuild_after_delete_' . $entry->class, 'blog:' . $entry->blog_id));
@@ -270,7 +276,8 @@ sub pre_delete_entry {
     return 1;
 }
 sub post_delete_entry {
-    my ($plugin, $class_name, $eh, $app, $entry) = @_;
+    my ($class_name, $eh, $app, $entry) = @_;
+    my $plugin = MT->component('super_sort');
 
     return 1 if (!$plugin->get_config_value('fjss_enabled_sort_' . $class_name, 'blog:' . $entry->blog_id) ||
                  !$plugin->get_config_value('fjss_auto_rebuild_after_delete_' . $entry->class, 'blog:' . $entry->blog_id));
@@ -283,7 +290,8 @@ sub post_delete_entry {
 }
 
 sub _rebuild_adjacent_entries {
-    my ($plugin, $app, $old_entries, $new_entries, $entry, $is_adj_rebuild) = @_;
+    my ($app, $old_entries, $new_entries, $entry, $is_adj_rebuild) = @_;
+    my $plugin = MT->component('super_sort');
 
     my $blog = MT::Blog->load($entry->blog_id);
     my %entries;
@@ -332,7 +340,8 @@ sub _load_places {
 }
 
 sub _load_adjacent_entries {
-    my ($plugin, $class_name, $places, $entries, $entry) = @_;
+    my ($class_name, $places, $entries, $entry) = @_;
+    my $plugin = MT->component('super_sort');
 
     $plugin->do_log('load adjacent entries start') if (DEBUG);
 
@@ -398,14 +407,16 @@ sub _load_adjacent_entries {
 }
 
 sub _load_places_and_adjacent_entries {
-    my ($plugin, $class_name, $places, $entries, $entry) = @_;
+    my ($class_name, $places, $entries, $entry) = @_;
+    my $plugin = MT->component('super_sort');
 
     _load_places($class_name, $places, $entry);
     _load_adjacent_entries($plugin, $class_name, $places, $entries, $entry);
 }
 
 sub bulk_save_categories {
-    my ($plugin, $eh, $app, $cats) = @_;
+    my ($eh, $app, $cats) = @_;
+    my $plugin = MT->component('super_sort');
 
     return 1 unless ($cats && scalar @$cats);
     my $class = $cats->[0]->class;
