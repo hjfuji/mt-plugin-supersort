@@ -25,7 +25,7 @@ use SuperSort::Util qw ( load_adjacent_entry left_join_placement );
 # MTSortedEntries tag
 sub sorted_entries {
     my ($ctx, $args, $cond) = @_;
-    my $plugin = MT->component('super_sort');
+    my $plugin = MT->component('SuperSort');
 
     # initialize
     my $class_type = $args->{class_type} || 'entry';
@@ -154,7 +154,7 @@ sub sorted_entries {
 # MTSortedEntries tag
 sub sorted_pages {
     my ($ctx, $args, $cond) = @_;
-    my $plugin = MT->component('super_sort');
+    my $plugin = MT->component('SuperSort');
 
     $args->{class_type} = 'page';
     if ($args->{folder}) {
@@ -172,7 +172,7 @@ sub sorted_pages {
 # MTSortedEntryNext tag
 sub sorted_entry_prev_next {
     my ($ctx, $args, $cond) = @_;
-    my $plugin = MT->component('super_sort');
+    my $plugin = MT->component('SuperSort');
 
     # initialize
     my $class_type = $args->{class_type} || 'entry';
@@ -221,7 +221,7 @@ sub sorted_entry_prev_next {
 # MTSortedCategoryNext tag
 sub sorted_category_prev_next {
     my ($ctx, $args, $cond) = @_;
-    my $plugin = MT->component('super_sort');
+    my $plugin = MT->component('SuperSort');
 
     my $res = '';
     my $cat = $ctx->stash('category') || $ctx->stash('archive_category');
@@ -280,7 +280,7 @@ sub sorted_category_prev_next {
 # MTSortedFolderNext tag
 sub sorted_folder_prev_next {
     my ($ctx, $args, $cond) = @_;
-    my $plugin = MT->component('super_sort');
+    my $plugin = MT->component('SuperSort');
 
     return undef unless MT::Template::Tags::Folder::_check_folder($ctx, $args, $cond);
     &sorted_category_prev_next(@_);
@@ -290,7 +290,7 @@ sub sorted_folder_prev_next {
 # MTSortedEntryNext tag
 sub sorted_page_prev_next {
     my ($ctx, $args, $cond) = @_;
-    my $plugin = MT->component('super_sort');
+    my $plugin = MT->component('SuperSort');
 
     $args->{class_type} = 'page';
     &sorted_entry_prev_next($ctx, $args, $cond);
@@ -299,7 +299,7 @@ sub sorted_page_prev_next {
 # MTEntryOrderNumber tag
 sub entry_order_number {
     my ($ctx, $args) = @_;
-    my $plugin = MT->component('super_sort');
+    my $plugin = MT->component('SuperSort');
 
     my $entry = $ctx->stash('entry')
         or return $ctx->_no_entry_error();
@@ -330,7 +330,7 @@ sub entry_order_number {
 # MTCategoryOrderNumber tag
 sub category_order_number {
     my ($ctx, $args) = @_;
-    my $plugin = MT->component('super_sort');
+    my $plugin = MT->component('SuperSort');
 
     my $cat = ($ctx->stash('category') || $ctx->stash('archive_category'))
         or return $ctx->error(MT->translate(
@@ -342,7 +342,7 @@ sub category_order_number {
 # MTFolderOrderNumber tag
 sub folder_order_number {
     my ($ctx, $args, $cond) = @_;
-    my $plugin = MT->component('super_sort');
+    my $plugin = MT->component('SuperSort');
 
     return undef unless MT::Template::Tags::Folder::_check_folder($ctx, $args, $cond);
     &category_order_number(@_);
@@ -351,7 +351,7 @@ sub folder_order_number {
 # MTSortedEntryCategories tag
 sub sorted_entry_categories {
     my ($ctx, $args, $cond) = @_;
-    my $plugin = MT->component('super_sort');
+    my $plugin = MT->component('SuperSort');
 
     my $entry = $ctx->stash('entry')
         or return $ctx->_no_entry_error();
@@ -428,7 +428,7 @@ sub _load_sorted_categories {
 # MTSortedTopLevelCategories tag
 sub sorted_top_level_categories {
     my ($ctx, $args, $cond) = @_;
-    my $plugin = MT->component('super_sort');
+    my $plugin = MT->component('SuperSort');
 
     return $ctx->invoke_handler('toplevelcategories', $args, $cond);
 }
@@ -436,7 +436,7 @@ sub sorted_top_level_categories {
 # MTSortedSubCategories tag
 sub sorted_sub_categories {
     my ($ctx, $args, $cond) = @_;
-    my $plugin = MT->component('super_sort');
+    my $plugin = MT->component('SuperSort');
 
     return $ctx->invoke_handler('subcategories', $args, $cond);
 }
@@ -444,7 +444,7 @@ sub sorted_sub_categories {
 # MTSortedTopLevelFolders tag
 sub sorted_top_level_folders {
     my ($ctx, $args, $cond) = @_;
-    my $plugin = MT->component('super_sort');
+    my $plugin = MT->component('SuperSort');
 
     return $ctx->invoke_handler('toplevelfolders' , $args, $cond);
 }
@@ -452,7 +452,7 @@ sub sorted_top_level_folders {
 # MTSortedSubFolders tag
 sub sorted_sub_folders {
     my ($ctx, $args, $cond) = @_;
-    my $plugin = MT->component('super_sort');
+    my $plugin = MT->component('SuperSort');
 
     return $ctx->invoke_handler('subfolders', $args, $cond);
 }

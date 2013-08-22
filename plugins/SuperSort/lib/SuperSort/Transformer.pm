@@ -17,7 +17,7 @@ use MT::Folder;
 
 sub edit_category {
     my ($cb, $app, $param, $tmpl) = @_;
-    my $plugin = MT->component('super_sort');
+    my $plugin = MT->component('SuperSort');
 
     if ($app->param('init_parent')) {
         my $parent = $app->param('init_parent');
@@ -33,7 +33,7 @@ HERE
 
 sub edit_entry {
     my ($cb, $app, $param, $tmpl) = @_;
-    my $plugin = MT->component('super_sort');
+    my $plugin = MT->component('SuperSort');
 
     if ($app->param('init_cat_id')) {
         $param->{selected_category_loop} = [ $app->param('init_cat_id') ];

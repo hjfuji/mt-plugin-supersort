@@ -15,8 +15,8 @@
 # Copyright(c) by H.Fujimoto
 #
 name: SuperSort
-id: super_sort
-key: super_sort
+id: SuperSort
+key: SuperSort
 version: 1.20b3
 author_name: <__trans phrase="Hajime Fujimoto">
 author_link: http://www.h-fj.com/blog/
@@ -43,26 +43,26 @@ schema_version: 1.01
 l10n_class: SuperSort::L10N
 tags:
   block:
-    SortedEntries: $super_sort::SuperSort::ContextHandler::sorted_entries
-    SortedPages: $super_sort::SuperSort::ContextHandler::sorted_pages
-    SortedEntryPrevious: $super_sort::SuperSort::ContextHandler::sorted_entry_prev_next
-    SortedEntryNext: $super_sort::SuperSort::ContextHandler::sorted_entry_prev_next
-    SortedPagePrevious: $super_sort::SuperSort::ContextHandler::sorted_page_prev_next
-    SortedPageNext: $super_sort::SuperSort::ContextHandler::sorted_page_prev_next
-    SortedCategoryPrevious: $super_sort::SuperSort::ContextHandler::sorted_category_prev_next
-    SortedCategoryNext: $super_sort::SuperSort::ContextHandler::sorted_category_prev_next
-    SortedFolderPrevious: $super_sort::SuperSort::ContextHandler::sorted_folder_prev_next
-    SortedFolderNext: $super_sort::SuperSort::ContextHandler::sorted_folder_prev_next
-    SortedEntryCategories: $super_sort::SuperSort::ContextHandler::sorted_entry_categories
-    SortedTopLevelCategories: $super_sort::SuperSort::ContextHandler::sorted_top_level_categories
-    SortedSubCategories: $super_sort::SuperSort::ContextHandler::sorted_sub_categories
-    SortedTopLevelFolders: $super_sort::SuperSort::ContextHandler::sorted_top_level_folders
-    SortedSubFolders: $super_sort::SuperSort::ContextHandler::sorted_sub_folders
+    SortedEntries: $SuperSort::SuperSort::ContextHandler::sorted_entries
+    SortedPages: $SuperSort::SuperSort::ContextHandler::sorted_pages
+    SortedEntryPrevious: $SuperSort::SuperSort::ContextHandler::sorted_entry_prev_next
+    SortedEntryNext: $SuperSort::SuperSort::ContextHandler::sorted_entry_prev_next
+    SortedPagePrevious: $SuperSort::SuperSort::ContextHandler::sorted_page_prev_next
+    SortedPageNext: $SuperSort::SuperSort::ContextHandler::sorted_page_prev_next
+    SortedCategoryPrevious: $SuperSort::SuperSort::ContextHandler::sorted_category_prev_next
+    SortedCategoryNext: $SuperSort::SuperSort::ContextHandler::sorted_category_prev_next
+    SortedFolderPrevious: $SuperSort::SuperSort::ContextHandler::sorted_folder_prev_next
+    SortedFolderNext: $SuperSort::SuperSort::ContextHandler::sorted_folder_prev_next
+    SortedEntryCategories: $SuperSort::SuperSort::ContextHandler::sorted_entry_categories
+    SortedTopLevelCategories: $SuperSort::SuperSort::ContextHandler::sorted_top_level_categories
+    SortedSubCategories: $SuperSort::SuperSort::ContextHandler::sorted_sub_categories
+    SortedTopLevelFolders: $SuperSort::SuperSort::ContextHandler::sorted_top_level_folders
+    SortedSubFolders: $SuperSort::SuperSort::ContextHandler::sorted_sub_folders
   function:
-    EntryOrderNumber: $super_sort::SuperSort::ContextHandler::entry_order_number
-    PageOrderNumber: $super_sort::SuperSort::ContextHandler::entry_order_number
-    CategoryOrderNumber: $super_sort::SuperSort::ContextHandler::category_order_number
-    FolderOrderNumber: $super_sort::SuperSort::ContextHandler::folder_order_number
+    EntryOrderNumber: $SuperSort::SuperSort::ContextHandler::entry_order_number
+    PageOrderNumber: $SuperSort::SuperSort::ContextHandler::entry_order_number
+    CategoryOrderNumber: $SuperSort::SuperSort::ContextHandler::category_order_number
+    FolderOrderNumber: $SuperSort::SuperSort::ContextHandler::folder_order_number
 object_types:
   entry:
     order_number: integer
@@ -71,9 +71,9 @@ object_types:
   category:
     order_number: integer
 callbacks:
-  MT::App::CMS::template_param.edit_category: $super_sort::SuperSort::Transformer::edit_category
-  MT::App::CMS::template_param.edit_folder: $super_sort::SuperSort::Transformer::edit_category
-  MT::App::CMS::template_param.edit_entry: $super_sort::SuperSort::Transformer::edit_entry
+  MT::App::CMS::template_param.edit_category: $SuperSort::SuperSort::Transformer::edit_category
+  MT::App::CMS::template_param.edit_folder: $SuperSort::SuperSort::Transformer::edit_category
+  MT::App::CMS::template_param.edit_entry: $SuperSort::SuperSort::Transformer::edit_entry
   cms_pre_save.category:
     priority: 1
     code: >
@@ -155,7 +155,7 @@ applications:
         condition: >
           sub {
             my $app = MT->instance;
-            my $plugin = MT->component('super_sort');
+            my $plugin = MT->component('SuperSort');
             my $blog_id = $app->param('blog_id') or return 0;
             return $plugin->get_config_value('fjss_enabled_sort_entry', 'blog:' . $blog_id);
           }
@@ -172,28 +172,28 @@ applications:
         condition: >
           sub {
             my $app = MT->instance;
-            my $plugin = MT->component('super_sort');
+            my $plugin = MT->component('SuperSort');
             my $blog_id = $app->param('blog_id') or return 0;
             return $plugin->get_config_value('fjss_enabled_sort_page', 'blog:' . $blog_id);
           }
     methods:
-      fjss_init_start: $super_sort::SuperSort::Initialize::init_start
-      fjss_init_main: $super_sort::SuperSort::Initialize::init_main
-      fjss_init_cat_order: $super_sort::SuperSort::Initialize::init_cat_order
-      fjss_init_entry_order: $super_sort::SuperSort::Initialize::init_entry_order
-      fjss_init_save_mt5_order: $super_sort::SuperSort::Initialize::init_save_mt5_order
-      fjss_sort_order: $super_sort::SuperSort::Sort::start_sort_order
-      fjss_load_categories: $super_sort::SuperSort::Sort::load_categories
-      fjss_load_entries: $super_sort::SuperSort::Sort::load_entries
-      fjss_save_start: $super_sort::SuperSort::Sort::save_start
-      fjss_save_moved_data: $super_sort::SuperSort::Sort::save_moved_data
-      fjss_save_cat_order: $super_sort::SuperSort::Sort::save_cat_order
-      fjss_save_entry_order: $super_sort::SuperSort::Sort::save_entry_order
-      fjss_select_category: $super_sort::SuperSort::Sort::select_category
-      fjss_get_child_categories: $super_sort::SuperSort::Sort::get_child_categories
-      fjss_move_start: $super_sort::SuperSort::Initialize::move_start
-      fjss_select_blogs: $super_sort::SuperSort::Initialize::select_blogs
-      fjss_move: $super_sort::SuperSort::Initialize::move
+      fjss_init_start: $SuperSort::SuperSort::Initialize::init_start
+      fjss_init_main: $SuperSort::SuperSort::Initialize::init_main
+      fjss_init_cat_order: $SuperSort::SuperSort::Initialize::init_cat_order
+      fjss_init_entry_order: $SuperSort::SuperSort::Initialize::init_entry_order
+      fjss_init_save_mt5_order: $SuperSort::SuperSort::Initialize::init_save_mt5_order
+      fjss_sort_order: $SuperSort::SuperSort::Sort::start_sort_order
+      fjss_load_categories: $SuperSort::SuperSort::Sort::load_categories
+      fjss_load_entries: $SuperSort::SuperSort::Sort::load_entries
+      fjss_save_start: $SuperSort::SuperSort::Sort::save_start
+      fjss_save_moved_data: $SuperSort::SuperSort::Sort::save_moved_data
+      fjss_save_cat_order: $SuperSort::SuperSort::Sort::save_cat_order
+      fjss_save_entry_order: $SuperSort::SuperSort::Sort::save_entry_order
+      fjss_select_category: $SuperSort::SuperSort::Sort::select_category
+      fjss_get_child_categories: $SuperSort::SuperSort::Sort::get_child_categories
+      fjss_move_start: $SuperSort::SuperSort::Initialize::move_start
+      fjss_select_blogs: $SuperSort::SuperSort::Initialize::select_blogs
+      fjss_move: $SuperSort::SuperSort::Initialize::move
 upgrade_functions:
   remove_orphan_categories:
     version_limit: 1.01

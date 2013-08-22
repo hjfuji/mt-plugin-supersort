@@ -30,7 +30,7 @@ my (%cat_info, @cat_labels);
 # start initialize
 sub init_start {
     my $app = shift;
-    my $plugin = MT->component('super_sort');
+    my $plugin = MT->component('SuperSort');
     my %param;
 
     # initialize
@@ -78,7 +78,7 @@ sub _init_start_load_categories_recursive {
 # initialize main
 sub init_main {
     my $app = shift;
-    my $plugin = MT->component('super_sort');
+    my $plugin = MT->component('SuperSort');
     my %param;
 
     # initialize
@@ -140,7 +140,7 @@ sub _init_main_load_categories_recursive {
 # initialize category order
 sub init_cat_order {
     my $app = shift;
-    my $plugin = MT->component('super_sort');
+    my $plugin = MT->component('SuperSort');
     my %param;
 
     # initialize
@@ -231,7 +231,7 @@ sub init_cat_order {
 # initialize entry order
 sub init_entry_order {
     my $app = shift;
-    my $plugin = MT->component('super_sort');
+    my $plugin = MT->component('SuperSort');
     my %param;
 
     my $blog_id = $app->param('blog_id');
@@ -350,7 +350,7 @@ sub _init_start_recursive {
 # save mt5 native category / folder sort order
 sub init_save_mt5_order {
     my $app = shift;
-    my $plugin = MT->component('super_sort');
+    my $plugin = MT->component('SuperSort');
 
     my $blog_id = $app->param('blog_id');
     my $class_name = $app->param('type');
@@ -382,7 +382,7 @@ sub _serialize_cats {
 
 sub move_start {
     my $app = shift;
-    my $plugin = MT->component('super_sort');
+    my $plugin = MT->component('SuperSort');
     my %param;
 
     if ($app->param('id')) {
@@ -404,7 +404,7 @@ sub move_start {
 
 sub select_blogs {
     my $app = shift;
-    my $plugin = MT->component('super_sort');
+    my $plugin = MT->component('SuperSort');
     my %param;
 
     # check permission
@@ -463,7 +463,7 @@ sub select_blogs {
 
 sub move {
     my $app = shift;
-    my $plugin = MT->component('super_sort');
+    my $plugin = MT->component('SuperSort');
     my %param;
 
     my $blog;

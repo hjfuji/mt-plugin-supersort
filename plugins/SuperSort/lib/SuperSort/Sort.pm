@@ -32,7 +32,7 @@ use constant PER_SAVE => 100;
 # start sort
 sub start_sort_order {
     my $app = shift;
-    my $plugin = MT->component('super_sort');
+    my $plugin = MT->component('SuperSort');
     my %param;
 
     my $blog_id = $app->param('blog_id');
@@ -83,7 +83,7 @@ sub start_sort_order {
 # load categories
 sub load_categories {
     my $app = shift;
-    my $plugin = MT->component('super_sort');
+    my $plugin = MT->component('SuperSort');
     my %param;
 
     my $blog_id = $app->param('blog_id');
@@ -127,7 +127,7 @@ sub load_categories {
 # load entries
 sub load_entries {
     my $app = shift;
-    my $plugin = MT->component('super_sort');
+    my $plugin = MT->component('SuperSort');
     my %param;
 
     # get parameter
@@ -201,7 +201,7 @@ sub load_entries {
 # save start
 sub save_start {
     my $app = shift;
-    my $plugin = MT->component('super_sort');
+    my $plugin = MT->component('SuperSort');
     my %param;
 
     my $blog_id = $app->param('blog_id');
@@ -226,7 +226,7 @@ sub save_start {
 # save moved data
 sub save_moved_data {
     my $app = shift;
-    my $plugin = MT->component('super_sort');
+    my $plugin = MT->component('SuperSort');
 
     # initialize
     my $moved_json = $app->param('md');
@@ -329,7 +329,7 @@ sub save_moved_data {
 
 sub save_cat_order {
     my $app = shift;
-    my $plugin = MT->component('super_sort');
+    my $plugin = MT->component('SuperSort');
 
     my $blog_id = $app->param('blog_id');
     my $parent_id = $app->param('parent_id');
@@ -369,7 +369,7 @@ sub save_cat_order {
 
 sub save_entry_order {
     my $app = shift;
-    my $plugin = MT->component('super_sort');
+    my $plugin = MT->component('SuperSort');
 
     my $blog_id = $app->param('blog_id');
     my $parent_id = $app->param('parent_id');
@@ -428,7 +428,7 @@ sub save_entry_order {
 # select category
 sub select_category {
     my $app = shift;
-    my $plugin = MT->component('super_sort');
+    my $plugin = MT->component('SuperSort');
     my %param;
 
     # load category data
@@ -464,7 +464,7 @@ sub select_category {
 # get child categories
 sub get_child_categories {
     my $app = shift;
-    my $plugin = MT->component('super_sort');
+    my $plugin = MT->component('SuperSort');
 
     my $id = $app->param('id');
     my $blog_id = $app->param('blog_id');
