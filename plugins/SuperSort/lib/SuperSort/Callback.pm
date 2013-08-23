@@ -139,7 +139,7 @@ sub pre_save_entry {
     else {
         my @places = ();
         my @entries = ();
-        _load_places_and_adjacent_entries($plugin, $class_name, \@places, \@entries, $entry);
+        _load_places_and_adjacent_entries($class_name, \@places, \@entries, $entry);
         $req->stash('SuperSort::entry_old_place', \@places);
         $req->stash('SuperSort::old_adjacent_entries', \@entries);
     }
@@ -251,8 +251,8 @@ sub post_save_entry {
     if ($plugin->get_config_value('fjss_auto_rebuild_' . $entry->class, 'blog:' . $entry->blog_id) && $do_rebuild) {
         my $old_entries = $req->stash('SuperSort::old_adjacent_entries') || [];
         my @new_entries = ();
-        _load_adjacent_entries($plugin, $class_name, \@new_places, \@new_entries, $entry);
-        _rebuild_adjacent_entries($plugin, $app, $old_entries, \@new_entries, $entry, $entry->class eq 'page');
+        _load_adjacent_entries($class_name, \@new_places, \@new_entries, $entry);
+        _rebuild_adjacent_entries($app, $old_entries, \@new_entries, $entry, $entry->class eq 'page');
     }
 
     return 1;
@@ -270,7 +270,7 @@ sub pre_delete_entry {
     my $req = MT::Request->instance;
     my @places = ();
     my @entries = ();
-    _load_places_and_adjacent_entries($plugin, $entry->class, \@places, \@entries, $entry);
+    _load_places_and_adjacent_entries($entry->class, \@places, \@entries, $entry);
     $req->stash('SuperSort::old_adjacent_entries', \@entries);
 
     return 1;
@@ -286,7 +286,7 @@ sub post_delete_entry {
 
     my $req = MT::Request->instance;
     my $old_entries = $req->stash('SuperSort::old_adjacent_entries') || [];
-    _rebuild_adjacent_entries($plugin, $app, $old_entries, [], $entry, 1);
+    _rebuild_adjacent_entries($app, $old_entries, [], $entry, 1);
 }
 
 sub _rebuild_adjacent_entries {
@@ -411,7 +411,7 @@ sub _load_places_and_adjacent_entries {
     my $plugin = MT->component('SuperSort');
 
     _load_places($class_name, $places, $entry);
-    _load_adjacent_entries($plugin, $class_name, $places, $entries, $entry);
+    _load_adjacent_entries($class_name, $places, $entries, $entry);
 }
 
 sub bulk_save_categories {
@@ -439,6 +439,30 @@ sub _recursive_bulk_save_categories {
         $i++;
     }
     return 1;
+}
+
+sub init_app {
+    my $app = shift;
+    my $plugin = MT->component('SuperSort');
+    bless $plugin, 'MT::Plugin::SuperSort';
+}
+
+package MT::Plugin::SuperSort;
+
+use MT::Plugin;
+use MT::Blog;
+use base qw( MT::Plugin );
+
+sub load_config {
+    my ($plugin, $param, $scope) = @_;
+
+    $plugin->SUPER::load_config($param, $scope);
+    return if ($scope eq 'system');
+
+    my $app = MT->instance;
+    my $blog = $app->blog;
+    $param->{fjss_blog_id} = $blog->id;
+    $param->{fjss_enable_entry} = (MT->version_number >= '6' || $blog->is_blog);
 }
 
 1;

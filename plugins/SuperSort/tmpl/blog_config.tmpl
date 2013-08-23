@@ -1,0 +1,29 @@
+<mtapp:setting
+    id="fjss_init_sort_order"
+    label="<__trans phrase="Initialize sort order">">
+    <__trans phrase="Please initialize sort order."><br />
+<mt:if name="fjss_enable_entry">
+    <a href="<mt:var name="script_url">?__mode=fjss_init_start&amp;blog_id=<mt:var name="fjss_blog_id">&amp;type=category"><__trans phrase="Initialize sort order of categories and entries"></a><br />
+</mt:if>
+    <a href="<mt:var name="script_url">?__mode=fjss_init_start&amp;blog_id=<mt:var name="fjss_blog_id">&amp;type=folder"><__trans phrase="Initialize sort order of folders and pages"></a><br />
+</mtapp:setting>
+
+<mtapp:setting
+    id="fjss_enabld_to_sort"
+    label="<__trans phrase="Enable to sort">">
+<mt:if name="fjss_enable_entry">
+    <input type="checkbox" name="fjss_enabled_sort_entry" id="fjss_enabled_sort_entry" value="1"<mt:if name="fjss_enabled_sort_entry" eq="1"> checked="checked"</mt:if> /> <__trans phrase="Enable to sort entries and categories"><br />
+</mt:if>
+    <input type="checkbox" name="fjss_enabled_sort_page" id="fjss_enabled_sort_page" value="1"<mt:if name="fjss_enabled_sort_page" eq="1"> checked="checked"</mt:if> /> <__trans phrase="Enable to sort pages and folders">
+</mtapp:setting>
+
+<mtapp:setting
+    id="fjss_enabled_drag_and_drop"
+    label="<__trans phrase="Drag and drop">">
+    <input type="checkbox" name="fjss_enabled_drag_and_drop" id="fjss_enabled_drag_and_drop" value="1"<mt:if name="fjss_enabled_drag_and_drop" eq="1"> checked="checked"</mt:if> /> <__trans phrase="Enable to drag and drop on sort">
+</mtapp:setting>
+
+<input type="hidden" name="fjss_auto_rebuild_entry" value="1" />
+<input type="hidden" name="fjss_auto_rebuild_page" value="1" />
+<input type="hidden" name="fjss_auto_rebuild_after_delete_entry" value="1" />
+<input type="hidden" name="fjss_auto_rebuild_after_delete_page" value="1" />
