@@ -37,6 +37,8 @@ settings:
     default: 1
   fjss_auto_rebuild_after_delete_page:
     default: 1
+  fjss_auto_rebuild_after_unpublish_past_entries:
+    default: 1
   fjss_enabled_drag_and_drop:
     default: 1
 schema_version: 1.01
@@ -228,6 +230,9 @@ applications:
     priority: 1
     code: >
       sub { require SuperSort::Callback; SuperSort::Callback::post_delete_category('folder', @_); }
+  unpublish_past_entries:
+    priority: 1
+    code: $SuperSort::SuperSort::Callback::unpublish_past_entries
   cms:
     menus:
       entry:fjss_cat_entry:

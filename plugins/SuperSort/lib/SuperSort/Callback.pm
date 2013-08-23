@@ -441,6 +441,19 @@ sub _recursive_bulk_save_categories {
     return 1;
 }
 
+sub unpublish_past_entries {
+    my ($cb, $mt, $entry) = @_;
+    my $plugin = MT->component('SuperSort');
+
+    return 1 if (!$plugin->get_config_value('fjss_enabled_sort_' . $class_name, 'blog:' . $entry->blog_id) ||
+                 !$plugin->get_config_value('fjss_auto_rebuild_after_unpublish_past_entries', 'blog:' . $entry->blog_id));
+
+    my @places = ();
+    my @entries = ();
+    _load_places_and_adjacent_entries($class_name, \@places, \@entries, $entry);    _rebuild_adjacent_entries($app, \@entries, [], $entry, $entry->class eq 'page');
+
+}
+
 sub init_app {
     my $app = shift;
     my $plugin = MT->component('SuperSort');
