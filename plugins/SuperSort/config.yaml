@@ -205,6 +205,7 @@ callbacks:
     priority: 1
     code: >
       sub { require SuperSort::Callback; SuperSort::Callback::post_save_entry('page', @_); }
+  unpublish_past_entries: $SuperSort::SuperSort::Callback::unpublish_past_entries
 applications:
   data_api_post_delete.entry:
     priority: 1
@@ -230,9 +231,6 @@ applications:
     priority: 1
     code: >
       sub { require SuperSort::Callback; SuperSort::Callback::post_delete_category('folder', @_); }
-  unpublish_past_entries:
-    priority: 1
-    code: $SuperSort::SuperSort::Callback::unpublish_past_entries
   cms:
     menus:
       entry:fjss_cat_entry:
