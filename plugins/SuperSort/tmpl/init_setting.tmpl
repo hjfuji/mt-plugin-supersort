@@ -65,7 +65,9 @@
 <mt:if name="type" eq="category">
 <p><a href="<mt:var name="script_url">?__mode=fjss_init_start&amp;blog_id=<mt:var name="blog_id">&amp;type=folder"><__trans phrase="Initialize sort order of folders and pages"></a></p>
 <mt:else>
+<mt:if name="can_category" eq="1">
 <p><a href="<mt:var name="script_url">?__mode=fjss_init_start&amp;blog_id=<mt:var name="blog_id">&amp;type=category"><__trans phrase="Initialize sort order of categories and entries"></a></p>
+</mt:if>
 </mt:if>
 
 <script type="text/javascript">

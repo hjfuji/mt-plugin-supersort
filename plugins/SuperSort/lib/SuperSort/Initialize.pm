@@ -38,6 +38,7 @@ sub init_start {
     if (!$blog_id) {
         $app->redirect($app->uri(mode => 'dashboard', args => { blog_id => 0 }));
     }
+    my $blog = $app->blog;
     my $type = $app->param('type');
     my $cat_class_name = ($type eq 'folder') ? 'folder' : 'category';
     my $cat_plural = ($type eq 'folder') ? 'folders' : 'categories';
@@ -57,6 +58,7 @@ sub init_start {
 
     # build page
     $param{blog_id} = $app->param('blog_id');
+    $param{can_category} = 1 if (MT->version_number >= 6 || $blog->is_blog);
     $param{position_actions_bottom} = 1;
     my $tmpl = $plugin->load_tmpl('init_setting.tmpl');
     $tmpl->text($plugin->translate_templatized($tmpl->text));
