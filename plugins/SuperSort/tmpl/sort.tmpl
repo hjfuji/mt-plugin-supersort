@@ -334,6 +334,7 @@ FJSuperSort.Initialize = function() {
     FJSuperSort.tree.getRootNode().expand();
 
     var root_items = [], sub_items = [];
+/*
     if (FJSuperSort.className == 'category') {
         root_items.push({
             id : 'create_root_cat',
@@ -346,6 +347,7 @@ FJSuperSort.Initialize = function() {
             handler : FJSuperSort.CreateCategory
         });
     }
+*/
     root_items.push({
         id : 'create_root_entry',
         text : '<__trans phrase="Create new [_1] in root [_2]" params="<$mt:var name="entry_single"$>%%<$mt:var name="cat_single"$>">',
@@ -822,6 +824,7 @@ FJSuperSort.DeleteCategory = function() {
         jQuery.ajax({
             type : 'GET',
             url : req_url,
+            dataType: 'json',
             success : FJSuperSort.DeleteCategoryMain,
             error : FJSuperSort.DeleteCategoryError
         });
@@ -830,8 +833,7 @@ FJSuperSort.DeleteCategory = function() {
 }
 
 FJSuperSort.DeleteCategoryMain = function(data) {
-    var cat_ids = jQuery.secureEvalJSON(data);
-    console.log(cat_ids);
+    var cat_ids = data;
     var html = '';
     for (var i = 0, j = cat_ids.ids.length; i < j; i++) {
         html += '<input type="hidden" name="id" value="' + cat_ids.ids[i] + '" />';
@@ -841,6 +843,7 @@ FJSuperSort.DeleteCategoryMain = function(data) {
 }
 
 FJSuperSort.DeleteCategoryError = function(data) {
+    alert('delete category error');
 }
 
 FJSuperSort.CreateCategory = function() {
