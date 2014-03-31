@@ -10,7 +10,7 @@ package SuperSort::Util;
 use strict;
 use base 'Exporter';
 
-our @EXPORT_OK = qw( load_adjacent_entry left_join_placement );
+our @EXPORT_OK = qw( load_adjacent_entry left_join_placement serialize_cats );
 
 use MT;
 use MT::Plugin;
@@ -84,5 +84,18 @@ sub left_join_placement {
         },
     );
 }
+
+sub serialize_cats {
+    my ($ser_cats, $cats, $parent) = @_;
+
+    my @sib_cats = grep { $_->parent == $parent } @$cats;
+    @$cats = grep { $_->parent != $parent } @$cats;
+    @sib_cats = sort { $a->order_number <=> $b->order_number } @sib_cats;
+    foreach (@sib_cats) {
+        push @$ser_cats, $_->id;
+        serialize_cats($ser_cats, $cats, $_->id);
+    }
+}
+
 
 1;

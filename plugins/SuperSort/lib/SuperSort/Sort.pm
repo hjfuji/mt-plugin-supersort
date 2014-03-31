@@ -19,7 +19,7 @@ use MT::Page;
 use MT::Category;
 use MT::Folder;
 use MT::Placement;
-use SuperSort::Util qw ( left_join_placement );
+use SuperSort::Util qw ( left_join_placement serialize_cats );
 
 use MT::Util qw( encode_js format_ts );
 use MT::I18N;
@@ -43,6 +43,21 @@ sub start_sort_order {
     my $class_name = $app->param('type') || 'category';
     my $cat_plural = ($class_name eq 'category') ? 'categories' : 'folders';
     my $entry_plural = ($class_name eq 'category') ? 'entries' : 'pages';
+
+    # save sort order
+    if ($app->param('saved')) {
+        eval {
+            my @cats = MT->model($class_name)->load({ blog_id => $blog_id });
+            my $ser_cats = [];
+            serialize_cats($ser_cats, \@cats, 0);
+            my $blog = $app->blog;
+            $blog->meta($class_name . '_order', join(',', @$ser_cats));
+            $blog->save;
+        };
+        if ($@) {
+            return $app->error($plugin->translate('Save [_1] sort order error.', $cat_plural));
+        }
+    }
 
     # count root categories / entries count
     my $class = MT->model($class_name);

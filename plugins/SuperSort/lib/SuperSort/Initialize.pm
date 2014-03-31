@@ -16,7 +16,7 @@ use MT::Entry;
 use MT::Page;
 use MT::Category;
 use MT::Folder;
-use SuperSort::Util qw ( left_join_placement );
+use SuperSort::Util qw ( left_join_placement serialize_cats );
 
 use MT::Util qw( encode_js );
 
@@ -362,24 +362,12 @@ sub init_save_mt5_order {
     eval {
         my @cats = $class->load({ blog_id => $blog_id });
         my $ser_cats = [];
-        _serialize_cats($ser_cats, \@cats, 0);
+        serialize_cats($ser_cats, \@cats, 0);
         my $blog = $app->blog;
         $blog->meta($class_name . '_order', join(',', @$ser_cats));
         $blog->save;
     };
     $app->print($@ ? 'ng' : 'ok');
-}
-
-sub _serialize_cats {
-    my ($ser_cats, $cats, $parent) = @_;
-
-    my @sib_cats = grep { $_->parent == $parent } @$cats;
-    @$cats = grep { $_->parent != $parent } @$cats;
-    @sib_cats = sort { $a->order_number <=> $b->order_number } @sib_cats;
-    foreach (@sib_cats) {
-        push @$ser_cats, $_->id;
-        _serialize_cats($ser_cats, $cats, $_->id);
-    }
 }
 
 sub move_start {
