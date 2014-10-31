@@ -167,7 +167,7 @@ comment out end */
             entry_ptr = 0;
 
             // show message
-            show_message('<__trans phrase="Check whether [_1] or [_2] order was changed" params="<mt:var name="cat_plural">%%<mt:var name="entry_single">"> : <mt:var name="cat_single"> \'' + node.attributes.text + '\'');
+            show_message('<__trans phrase="Check whether [_1] or [_2] order was changed" params="<mt:var name="cat_plural">%%<mt:var name="entry_single">"> : <mt:var name="cat_single"> \'' + node.attributes.text.encodeHTML() + '\'');
 
             // check that category order was changed
             var old_cat_order = node.attributes.cat_order;
