@@ -115,7 +115,7 @@ FJSuperSort.TreeNodeUI = Ext.extend(Ext.tree.TreeNodeUI, {
             '<a hidefocus="on" class="x-tree-node-anchor" href="',href,'" tabIndex="1" ',
             a.hrefTarget ? ' target="'+a.hrefTarget+'"' : "", '><span unselectable="on"',
             (a.cls == 'file') ? ' title="<__trans phrase="Date"> : ' + a.date + ', <__trans phrase="Author"> : ' + escape(a.author) + '"' : '',
-            '>', n.text ,"</span></a></div>",
+            '>', n.text.encodeHTML() ,"</span></a></div>",
             '<ul class="x-tree-node-ct" style="display:none;"></ul>',
             "</li>"].join('');
 

@@ -41,8 +41,13 @@ sub start_sort_order {
     }
     my $blog = MT::Blog->load($blog_id);
     my $class_name = $app->param('type') || 'category';
+    my $entry_class_name = $app->param('type') eq 'folder' ? 'page' : 'entry';
     my $cat_plural = ($class_name eq 'category') ? 'categories' : 'folders';
     my $entry_plural = ($class_name eq 'category') ? 'entries' : 'pages';
+
+    if (!$plugin->get_config_value('fjss_enabled_sort_' . $entry_class_name , 'blog:' . $blog_id)) {
+        $app->redirect($app->uri(mode => 'dashboard', args => { blog_id => $blog_id }));
+    }
 
     # save sort order
     if ($app->param('saved')) {
@@ -63,7 +68,6 @@ sub start_sort_order {
     my $class = MT->model($class_name);
     my $cat_count = $class->count({ blog_id => $blog_id,
                                     parent => 0 });
-    my $entry_class_name = ($class_name eq 'category') ? 'entry' : 'page';
     my $entry_count = MT->model($entry_class_name)->count(
                           {
                               blog_id => $blog_id

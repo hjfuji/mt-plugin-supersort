@@ -12,6 +12,7 @@
 # 2012/07/20 1.20b2 For Movable Type 5.2
 # 2013/08/22 1.20b3 For Movable Type 6
 # 2014/04/01 1.20b4 Fixed bugs
+# 2014/10/31 1.20b5 Fixed bugs
 #
 # Copyright(c) by H.Fujimoto
 #
@@ -87,19 +88,19 @@ callbacks:
     code: >
       sub { require SuperSort::Callback; SuperSort::Callback::pre_save_category('folder', @_); }
   cms_post_save.category:
-    priority: 1
+    priority: 9
     code: >
       sub { require SuperSort::Callback; SuperSort::Callback::post_save_category('category', @_); }
   cms_post_save.folder:
-    priority: 1
+    priority: 9
     code: >
       sub { require SuperSort::Callback; SuperSort::Callback::post_save_category('folder', @_); }
   cms_post_delete.category:
-    priority: 1
+    priority: 9
     code: >
       sub { require SuperSort::Callback; SuperSort::Callback::post_delete_category('category', @_); }
   cms_post_delete.folder:
-    priority: 1
+    priority: 9
     code: >
       sub { require SuperSort::Callback; SuperSort::Callback::post_delete_category('folder', @_); }
   cms_pre_save.entry:
@@ -111,19 +112,19 @@ callbacks:
     code: >
       sub { require SuperSort::Callback; SuperSort::Callback::pre_save_entry('page', @_); }
   cms_post_save.entry:
-    priority: 1
+    priority: 9
     code: >
       sub { require SuperSort::Callback; SuperSort::Callback::post_save_entry('entry', @_); }
   cms_post_save.page:
-    priority: 1
+    priority: 9
     code: >
       sub { require SuperSort::Callback; SuperSort::Callback::post_save_entry('page', @_); }
   cms_post_delete.entry:
-    priority: 1
+    priority: 9
     code: >
       sub { require SuperSort::Callback; SuperSort::Callback::post_delete_entry('entry', @_); }
   cms_post_delete.page:
-    priority: 1
+    priority: 9
     code: >
       sub { require SuperSort::Callback; SuperSort::Callback::post_delete_entry('page', @_); }
   cms_delete_permission_filter.entry:
@@ -135,11 +136,11 @@ callbacks:
     code: >
       sub { require SuperSort::Callback; SuperSort::Callback::pre_delete_entry(@_); }
   cms_post_bulk_save.category:
-    priority: 1
+    priority: 9
     code: >
       sub { require SuperSort::Callback; SuperSort::Callback::bulk_save_categories(@_); }
   cms_post_bulk_save.folder:
-    priority: 1
+    priority: 9
     code: >
       sub { require SuperSort::Callback; SuperSort::Callback::bulk_save_categories(@_); }
   api_pre_save.category:
@@ -151,11 +152,11 @@ callbacks:
     code: >
       sub { require SuperSort::Callback; SuperSort::Callback::pre_save_category('folder', @_); }
   api_post_save.category:
-    priority: 1
+    priority: 9
     code: >
       sub { require SuperSort::Callback; SuperSort::Callback::post_save_category('category', @_); }
   api_post_save.folder:
-    priority: 1
+    priority: 9
     code: >
       sub { require SuperSort::Callback; SuperSort::Callback::post_save_category('folder', @_); }
   api_pre_save.entry:
@@ -167,11 +168,11 @@ callbacks:
     code: >
       sub { require SuperSort::Callback; SuperSort::Callback::pre_save_entry('page', @_); }
   api_post_save.entry:
-    priority: 1
+    priority: 9
     code: >
       sub { require SuperSort::Callback; SuperSort::Callback::post_save_entry('entry', @_); }
   api_post_save.page:
-    priority: 1
+    priority: 9
     code: >
       sub { require SuperSort::Callback; SuperSort::Callback::post_save_entry('page', @_); }
   data_api_pre_save.category:
@@ -183,11 +184,11 @@ callbacks:
     code: >
       sub { require SuperSort::Callback; SuperSort::Callback::pre_save_category('folder', @_); }
   data_api_post_save.category:
-    priority: 1
+    priority: 9
     code: >
       sub { require SuperSort::Callback; SuperSort::Callback::post_save_category('category', @_); }
   data_api_post_save.folder:
-    priority: 1
+    priority: 9
     code: >
       sub { require SuperSort::Callback; SuperSort::Callback::post_save_category('folder', @_); }
   data_api_pre_save.entry:
@@ -199,21 +200,21 @@ callbacks:
     code: >
       sub { require SuperSort::Callback; SuperSort::Callback::pre_save_entry('page', @_); }
   data_api_post_save.entry:
-    priority: 1
+    priority: 9
     code: >
       sub { require SuperSort::Callback; SuperSort::Callback::post_save_entry('entry', @_); }
   data_api_post_save.page:
-    priority: 1
+    priority: 9
     code: >
       sub { require SuperSort::Callback; SuperSort::Callback::post_save_entry('page', @_); }
   unpublish_past_entries: $SuperSort::SuperSort::Callback::unpublish_past_entries
 applications:
   data_api_post_delete.entry:
-    priority: 1
+    priority: 9
     code: >
       sub { require SuperSort::Callback; SuperSort::Callback::post_delete_entry('entry', @_); }
   data_api_post_delete.page:
-    priority: 1
+    priority: 9
     code: >
       sub { require SuperSort::Callback; SuperSort::Callback::post_delete_entry('page', @_); }
   data_api_delete_permission_filter.entry:
@@ -225,11 +226,11 @@ applications:
     code: >
       sub { require SuperSort::Callback; SuperSort::Callback::pre_delete_entry(@_); }
   data_api_post_delete.category:
-    priority: 1
+    priority: 9
     code: >
       sub { require SuperSort::Callback; SuperSort::Callback::post_delete_category('category', @_); }
   data_api_post_delete.folder:
-    priority: 1
+    priority: 9
     code: >
       sub { require SuperSort::Callback; SuperSort::Callback::post_delete_category('folder', @_); }
   cms:
