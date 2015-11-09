@@ -1,4 +1,4 @@
-#
+#cd 
 # SuperSort
 # 2008/10/20 1.00b1 Beta release
 # 2009/02/02 1.00rc1 Release Candidate 1
@@ -13,13 +13,14 @@
 # 2013/08/22 1.20b3 For Movable Type 6
 # 2014/04/01 1.20b4 Fixed bugs
 # 2014/10/31 1.20b5 Fixed bugs
+# 2015/11/09 1.21 Fixed PSGI
 #
 # Copyright(c) by H.Fujimoto
 #
 name: SuperSort
 id: SuperSort
 key: SuperSort
-version: 1.20b5
+version: 1.21
 author_name: <__trans phrase="Hajime Fujimoto">
 author_link: http://www.h-fj.com/blog/
 doc_link: http://www.h-fj.com/blog/mtplgdoc/supersort.php
@@ -208,7 +209,6 @@ callbacks:
     code: >
       sub { require SuperSort::Callback; SuperSort::Callback::post_save_entry('page', @_); }
   unpublish_past_entries: $SuperSort::SuperSort::Callback::unpublish_past_entries
-applications:
   data_api_post_delete.entry:
     priority: 9
     code: >
@@ -233,6 +233,15 @@ applications:
     priority: 9
     code: >
       sub { require SuperSort::Callback; SuperSort::Callback::post_delete_category('folder', @_); }
+  data_api_post_bulk_save.category:
+    priority: 9
+    code: >
+      sub { require SuperSort::Callback; SuperSort::Callback::bulk_save_categories(@_); }
+  data_api_post_bulk_save.folder:
+    priority: 9
+    code: >
+      sub { require SuperSort::Callback; SuperSort::Callback::bulk_save_categories(@_); }
+applications:
   cms:
     menus:
       entry:fjss_cat_entry:
